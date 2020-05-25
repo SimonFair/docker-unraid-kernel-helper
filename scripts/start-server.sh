@@ -1,4 +1,16 @@
 #!/bin/bash
+## Setting build variables
+UNAME="$(uname -r)"
+CUR_K_V="$(uname -r | cut -d '-' -f 1)"
+MAIN_V="$(uname -r | cut -d '.' -f 1)"
+if [ "$CPU_COUNT" == "all" ];then
+	CPU_COUNT="$(grep -c ^processor /proc/cpuinfo)"
+	echo "---Setting compile cores to $CPU_COUNT---"
+else
+	echo "---Setting compile cores to $CPU_COUNT---"
+fi
+
+## Check if custom mode is enabled
 if [ "$CUSTOM_MODE" == "true" ]; then
 	echo "-------------------------------------------------------------------"
 	echo "------Custom mode enabled, putting container into sleep mode!------"
@@ -41,17 +53,6 @@ echo "------process. The build process begins after 60------"
 echo "-----------that this message first appeared-----------"
 echo "------------------------------------------------------"
 sleep 60
-
-## Setting build variables
-UNAME="$(uname -r)"
-CUR_K_V="$(uname -r | cut -d '-' -f 1)"
-MAIN_V="$(uname -r | cut -d '.' -f 1)"
-if [ "$CPU_COUNT" == "all" ];then
-	CPU_COUNT="$(grep -c ^processor /proc/cpuinfo)"
-	echo "---Setting compile cores to $CPU_COUNT---"
-else
-	echo "---Setting compile cores to $CPU_COUNT---"
-fi
 
 if [ "${BUILD_DVB}" == "true" ]; then
 	## Get latest version from DigitalDevices drivers
