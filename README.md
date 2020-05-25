@@ -71,4 +71,4 @@ docker run --name Unraid-Kernel-Helper -d \
 
 If you don't use Unraid you should definitely try it!
 
-#### Support Thread: 
+#### Support Thread: https://forums.unraid.net/topic/92865-support-ich777-nvidiadvb-kernel-helper-docker/
