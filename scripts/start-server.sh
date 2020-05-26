@@ -18,7 +18,7 @@ if [ "$CUSTOM_MODE" == "true" ]; then
 	echo "------The basic script is copied over to your main directory!------"
 	echo "-------------------------------------------------------------------"
 	if [ ! -f ${DATA_DIR}/buildscript.sh ]; then
-    	cp /opt/scripts/start-server.sh ${DATA_DIR}/buildscript.sh
+		cp /opt/scripts/start-server.sh ${DATA_DIR}/buildscript.sh
 	fi
 	sed -i '/## Check if custom mode is enabled/,+16 d' ${DATA_DIR}/buildscript.sh
 	chmod +x ${DATA_DIR}/buildscript.sh
@@ -564,6 +564,35 @@ chown -R ${UID}:${GID} ${DATA_DIR}
 chmod -R ${DATA_PERM} ${DATA_DIR}
 
 ## End message
+echo
+echo
+echo
+echo "-----------------------------------------------"
+echo "-----The built images are located in your------"
+echo "------output folder: 'output-$UNAME'-------"
+echo "-----------------------------------------------"
+if [ "${CUSTOM_MODE}" == "true" ]; then
+	echo "-----The images were built with CUSTOM_MODE----"
+	echo "-------------------enabled!--------------------"
+else
+	echo "---The images were built with the following----"
+	echo "------build options and version numbers:-------"
+	if [ "${BUILD_NVIDIA}" == "true" ]; then
+		echo "-------nVidia driver version: $NV_DRV_V-------"
+		echo "------lib-nvidia-container version: $LIBNVIDIA_CONTAINER_V------"
+		echo "----nvidia-container-runtime version: $NVIDIA_CONTAINER_RUNTIME_V----"
+		if [ "${NVIDIA_CONTAINER_RUNTIME_V//./}" -ge "320" ]; then
+			echo "------container-toolkit version: $CONTAINER_TOOLKIT_V=------"
+		fi
+		echo "------------Seccomp version: $SECCOMP_V------------"
+	fi
+	if [ "${BUILD_DVB}" == "true" ]; then
+		echo "-------DigitalDevices driver version: $DD_DRV_V-------"
+		echo "-------LibreELEC driver version: $LE_DRV_V-------"
+		echo "------Xbox One Digital TV Tuner firwmare-------"
+	fi
+fi
+echo "-----------------------------------------------"
 echo
 echo
 echo
