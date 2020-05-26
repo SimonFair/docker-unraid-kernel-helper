@@ -56,18 +56,20 @@ echo "------process. The build process begins after 60------"
 echo "------seconds that this message first appeared--------"
 echo "------------------------------------------------------"
 if [ "${BUILD_NVIDIA}" == "true" ]; then
-echo
-echo "------------------------------------------------------"
-echo "---WARNING WARNING WARNING WARNING WARNING WARNING----"
-echo "------------------------------------------------------"
-echo "---nVidia driver build is enabled, please make sure---"
-echo "----that no process/container/VM uses the graphics----"
-echo "---otherwise the installation of the graphic driver---"
-echo "-------will fail and you are not able to use the------"
-echo "--------graphic card in any Docker container!---------"
-echo "------------------------------------------------------"
-echo "---WARNING WARNING WARNING WARNING WARNING WARNING----"
-echo "------------------------------------------------------"
+	echo
+	echo "------------------------------------------------------"
+	echo "---WARNING WARNING WARNING WARNING WARNING WARNING----"
+	echo "------------------------------------------------------"
+	echo "---nVidia driver build is enabled, please make sure---"
+	echo "----that no process/container/VM uses the graphics----"
+	echo "----card when running the build process otherwise-----"
+	echo "--------the installation of the graphics driver-------"
+	echo "-------will fail and you are not able to use the------"
+	echo "--------graphic card in any Docker container!---------"
+	echo "------------------------------------------------------"
+	echo "---WARNING WARNING WARNING WARNING WARNING WARNING----"
+	echo "------------------------------------------------------"
+fi
 sleep 60
 
 if [ "${BUILD_DVB}" == "true" ]; then
