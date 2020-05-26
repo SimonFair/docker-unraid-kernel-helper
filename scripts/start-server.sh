@@ -17,7 +17,10 @@ if [ "$CUSTOM_MODE" == "true" ]; then
 	echo "---Please connect to the console and build your Kernel manually!---"
 	echo "------The basic script is copied over to your main directory!------"
 	echo "-------------------------------------------------------------------"
-	cp /opt/scripts/start-server.sh ${DATA_DIR}/buildscript.sh
+	if [ ! -f ${DATA_DIR}/buildscript.sh ]; then
+    	cp /opt/scripts/start-server.sh ${DATA_DIR}/buildscript.sh
+	fi
+	sed -i '/## Check if custom mode is enabled/,+16 d' ${DATA_DIR}/buildscript.sh
 	chmod +x ${DATA_DIR}/buildscript.sh
 	chown -R ${UID}:${GID} ${DATA_DIR}
 	chmod -R ${DATA_PERM} ${DATA_DIR}
@@ -45,12 +48,12 @@ echo "-------ALL DONE message at the end appears, the-------"
 echo "----------container will automatically stop.----------"
 echo "----Also please backup your existing files if not-----"
 echo "---selcted in the template. I'm not responsible if----"
-echo "----break your stuff, this container is only here-----"
+echo "---you break your stuff, this container is only here--"
 echo "---for your help, if something changes at building----"
 echo "-------on Github or any other source that this--------"
 echo "---container is using it could ruin the whole build---"
 echo "------process. The build process begins after 60------"
-echo "-----------that this message first appeared-----------"
+echo "------seconds that this message first appeared--------"
 echo "------------------------------------------------------"
 sleep 60
 
@@ -111,17 +114,30 @@ if [ "${BUILD_NVIDIA}" == "true" ]; then
 		echo "---Seccomp manually set to: v$SECCOMP_V---"
 	fi
 
-	## Get latest version from 'nvidia_container_runtime'
+	## Get latest version from 'nvidia-container-runtime'
 	if [ "${NVIDIA_CONTAINER_RUNTIME_V}" == "latest" ]; then
-		echo "---Trying to get latest verson for 'nvidia_container_runtime' driver---"
+		echo "---Trying to get latest verson for 'nvidia-container-runtime' driver---"
 		NVIDIA_CONTAINER_RUNTIME_V="$(curl -s https://api.github.com/repos/NVIDIA/nvidia-container-runtime/releases/latest | grep tag_name | cut -d '"' -f4 | cut -d 'v' -f2)"
 		if [ -z $NVIDIA_CONTAINER_RUNTIME_V ]; then
-			echo "---Can't get latest version for 'nvidia_container_runtime', putting container into sleep mode!---"
+			echo "---Can't get latest version for 'nvidia-container-runtime', putting container into sleep mode!---"
 			sleep infinity
 		fi
-		echo "---Latest version for 'nvidia_container_runtime': v$NVIDIA_CONTAINER_RUNTIME_V---"
+		echo "---Latest version for 'nvidia-container-runtime': v$NVIDIA_CONTAINER_RUNTIME_V---"
 	else
-		echo "---'nvidia_container_runtime' manually set to: v$NVIDIA_CONTAINER_RUNTIME_V---"
+		echo "---'nvidia-container-runtime' manually set to: v$NVIDIA_CONTAINER_RUNTIME_V---"
+	fi
+
+	## Get latest version from 'nvidia-toolkit'
+	if [ "${CONTAINER_TOOLKIT_V}" == "latest" ]; then
+		echo "---Trying to get latest verson for 'nvidia-toolkit' driver---"
+		CONTAINER_TOOLKIT_V="$(curl -s https://api.github.com/repos/NVIDIA/container-toolkit/releases/latest | grep tag_name | cut -d '"' -f4 | cut -d 'v' -f2)"
+		if [ -z $CONTAINER_TOOLKIT_V ]; then
+			echo "---Can't get latest version for 'nvidia-toolkit', putting container into sleep mode!---"
+			sleep infinity
+		fi
+		echo "---Latest version for 'nvidia-toolkit': v$CONTAINER_TOOLKIT_V---"
+	else
+		echo "---'nvidia-toolkit' manually set to: v$CONTAINER_TOOLKIT_V---"
 	fi
 
 	## Get latest version from 'libnvidia-container'
@@ -402,26 +418,56 @@ if [ "${BUILD_NVIDIA}" == "true" ]; then
 }
 EOF
 
-	## Compile 'nvidia-container-runtime'
-	echo "---Compiling 'nvidia-container-toolkit', this can take some time, please wait!---"
-	mkdir -p ${DATA_DIR}/go/src/github.com/NVIDIA
-	cd ${DATA_DIR}/go/src/github.com/NVIDIA
-	git clone https://github.com/NVIDIA/nvidia-container-runtime.git
-	cd ${DATA_DIR}/go/src/github.com/NVIDIA/nvidia-container-runtime
-	git checkout v$NVIDIA_CONTAINER_RUNTIME_V
-	go build -ldflags "-s -w" -v github.com/NVIDIA/nvidia-container-runtime/toolkit/nvidia-container-toolkit
-	cp ${DATA_DIR}/go/src/github.com/NVIDIA/nvidia-container-runtime/nvidia-container-toolkit ${DATA_DIR}/bzroot-extracted-$UNAME/usr/bin
-	cd ${DATA_DIR}/bzroot-extracted-$UNAME/usr/bin
-	ln -s /usr/bin/nvidia-container-toolkit nvidia-container-runtime-hook
-	mkdir -p ${DATA_DIR}/bzroot-extracted-$UNAME/etc/nvidia-container-runtime
-	cp ${DATA_DIR}/go/src/github.com/NVIDIA/nvidia-container-runtime/toolkit/config.toml.debian ${DATA_DIR}/bzroot-extracted-$UNAME/etc/nvidia-container-runtime/config.toml
-	sed -i '/#path/c\path = "/usr/bin/nvidia-container-cli"' ${DATA_DIR}/bzroot-extracted-$UNAME/etc/nvidia-container-runtime/config.toml
-	sed -i '/#ldcache/c\ldcache = "/etc/ld.so.cache"' ${DATA_DIR}/bzroot-extracted-$UNAME/etc/nvidia-container-runtime/config.toml
+	## Select build process for 'nvidia-container-runtime' & 'nvidia-container-toolkit'
+	if [ "${NVIDIA_CONTAINER_RUNTIME_V//./}" -le "314" ]; then
+		## Compile 'nvidia-container-toolkit' v3.1.4 and lower
+		echo "---Compiling 'nvidia-container-toolkit', this can take some time, please wait!---"
+		mkdir -p ${DATA_DIR}/go/src/github.com/NVIDIA
+		cd ${DATA_DIR}/go/src/github.com/NVIDIA
+		git clone https://github.com/NVIDIA/nvidia-container-runtime.git
+		cd ${DATA_DIR}/go/src/github.com/NVIDIA/nvidia-container-runtime
+		git checkout v$NVIDIA_CONTAINER_RUNTIME_V
+		go build -ldflags "-s -w" -v github.com/NVIDIA/nvidia-container-runtime/toolkit/nvidia-container-toolkit
+		cp ${DATA_DIR}/go/src/github.com/NVIDIA/nvidia-container-runtime/nvidia-container-toolkit ${DATA_DIR}/bzroot-extracted-$UNAME/usr/bin
+		cd ${DATA_DIR}/bzroot-extracted-$UNAME/usr/bin
+		ln -s /usr/bin/nvidia-container-toolkit nvidia-container-runtime-hook
+		mkdir -p ${DATA_DIR}/bzroot-extracted-$UNAME/etc/nvidia-container-runtime
+		cp ${DATA_DIR}/go/src/github.com/NVIDIA/nvidia-container-runtime/toolkit/config.toml.debian ${DATA_DIR}/bzroot-extracted-$UNAME/etc/nvidia-container-runtime/config.toml
+		sed -i '/#path/c\path = "/usr/bin/nvidia-container-cli"' ${DATA_DIR}/bzroot-extracted-$UNAME/etc/nvidia-container-runtime/config.toml
+		sed -i '/#ldcache/c\ldcache = "/etc/ld.so.cache"' ${DATA_DIR}/bzroot-extracted-$UNAME/etc/nvidia-container-runtime/config.toml
 
-	### Compile 'nvidia-container-runtime'
-	cd ${DATA_DIR}/go/src/github.com/NVIDIA/nvidia-container-runtime/runtime/src
-	make
-	cp ${DATA_DIR}/go/src/github.com/NVIDIA/nvidia-container-runtime/runtime/src/nvidia-container-runtime ${DATA_DIR}/bzroot-extracted-$UNAME/usr/bin
+		### Compile 'nvidia-container-runtime' v3.1.4 and lower
+		echo "---Compiling 'nvidia-container-runtime', this can take some time, please wait!---"
+		cd ${DATA_DIR}/go/src/github.com/NVIDIA/nvidia-container-runtime/runtime/src
+		make
+		cp ${DATA_DIR}/go/src/github.com/NVIDIA/nvidia-container-runtime/runtime/src/nvidia-container-runtime ${DATA_DIR}/bzroot-extracted-$UNAME/usr/bin
+	else
+		### Compile 'nvidia-container-runtime' v3.2.0 and up
+		echo "---Compiling 'nvidia-container-runtime', this can take some time, please wait!---"
+		mkdir -p ${DATA_DIR}/go/src/github.com/NVIDIA
+		cd ${DATA_DIR}/go/src/github.com/NVIDIA
+		git clone https://github.com/NVIDIA/nvidia-container-runtime.git
+		cd ${DATA_DIR}/go/src/github.com/NVIDIA/nvidia-container-runtime
+		git checkout v$NVIDIA_CONTAINER_RUNTIME_V
+		cd ${DATA_DIR}/go/src/github.com/NVIDIA/nvidia-container-runtime/src
+		make build
+		cp ${DATA_DIR}/go/src/github.com/NVIDIA/nvidia-container-runtime/src/nvidia-container-runtime ${DATA_DIR}/bzroot-extracted-$UNAME/usr/bin
+
+		### Compile 'nvidia-container-toolkit' v3.2.0 and up
+		echo "---Compiling 'container-toolkit', this can take some time, please wait!---"
+		cd ${DATA_DIR}/go/src/github.com/NVIDIA
+		git clone https://github.com/NVIDIA/container-toolkit
+		cd ${DATA_DIR}/go/src/github.com/NVIDIA/container-toolkit
+		git checkout v$CONTAINER_TOOLKIT_V
+		make binary
+		cp ${DATA_DIR}/go/src/github.com/NVIDIA/container-toolkit/nvidia-container-toolkit ${DATA_DIR}/bzroot-extracted-$UNAME/usr/bin
+		cd ${DATA_DIR}/bzroot-extracted-$UNAME/usr/bin
+		ln -s /usr/bin/nvidia-container-toolkit nvidia-container-runtime-hook
+		mkdir -p ${DATA_DIR}/bzroot-extracted-$UNAME/etc/nvidia-container-runtime
+		cp ${DATA_DIR}/go/src/github.com/NVIDIA/container-toolkit/config/config.toml.debian ${DATA_DIR}/bzroot-extracted-$UNAME/etc/nvidia-container-runtime/config.toml
+		sed -i '/#path/c\path = "/usr/bin/nvidia-container-cli"' ${DATA_DIR}/bzroot-extracted-$UNAME/etc/nvidia-container-runtime/config.toml
+		sed -i '/#ldcache/c\ldcache = "/etc/ld.so.cache"' ${DATA_DIR}/bzroot-extracted-$UNAME/etc/nvidia-container-runtime/config.toml
+	fi
 
 	### Install Seccomp
 	cd ${DATA_DIR}
