@@ -17,10 +17,15 @@ if [ "$CUSTOM_MODE" == "true" ]; then
 	echo "---Please connect to the console and build your Kernel manually!---"
 	echo "------The basic script is copied over to your main directory!------"
 	echo "-------------------------------------------------------------------"
+	echo
+	echo "-------------------------------------------------------------------"
+	echo "----I strongly recommend to shutdown all containers/VMs during-----"
+	echo "--------------the build process for safety reasons!----------------"
+	echo "-------------------------------------------------------------------"
 	if [ ! -f ${DATA_DIR}/buildscript.sh ]; then
 		cp /opt/scripts/start-server.sh ${DATA_DIR}/buildscript.sh
 	fi
-	sed -i '/## Check if custom mode is enabled/,+16 d' ${DATA_DIR}/buildscript.sh
+	sed -i '/## Check if custom mode is enabled/,+21 d' ${DATA_DIR}/buildscript.sh
 	chmod +x ${DATA_DIR}/buildscript.sh
 	chown -R ${UID}:${GID} ${DATA_DIR}
 	chmod -R ${DATA_PERM} ${DATA_DIR}
