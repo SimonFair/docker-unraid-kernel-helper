@@ -1,8 +1,10 @@
 #!/bin/bash
 ## Setting build variables
-UNAME="$(uname -r)"
-CUR_K_V="$(uname -r | cut -d '-' -f 1)"
-MAIN_V="$(uname -r | cut -d '.' -f 1)"
+if [ -z "${UNAME}" ]; then
+	UNAME="$(uname -r)"
+fi
+CUR_K_V="$(echo $UNAME | cut -d '-' -f 1)"
+MAIN_V="$(echo $UNAME | cut -d '.' -f 1)"
 if [ "$CPU_COUNT" == "all" ];then
 	CPU_COUNT="$(grep -c ^processor /proc/cpuinfo)"
 	echo "---Setting compile cores to $CPU_COUNT---"
