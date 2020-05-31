@@ -39,6 +39,7 @@ In this mode the container will stop right at the beginning and will copy over t
 | CREATE_BACKUP | Create Backup of your existing files to data directory | true |
 | CLEANUP | Available options are: 'full', 'moderate', 'none' | moderate |
 | CUSTOM_MODE | Only for advanced users, leave empty when you don't know what it is | |
+| UNAME | Enter a custom Kernel version if needed (in this format: '4.19.107') otherwise leave empty, only for advanced users! | |
 | UID | User Identifier | 99 |
 | GID | Group Identifier | 100 |
 | UMASK | User file permission mask for newly created files | 000 |
