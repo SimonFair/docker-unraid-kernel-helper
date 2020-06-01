@@ -80,12 +80,36 @@ if [ "${BUILD_NVIDIA}" == "true" ]; then
 	echo "---WARNING WARNING WARNING WARNING WARNING WARNING----"
 	echo "------------------------------------------------------"
 fi
+if [ "$USER_PATCHES" == "true" ]; then
+	if [ ! -d ${DATA_DIR}/user_patches ]; then
+		mkdir ${DATA_DIR}/user_patches
+		chmod -R ${DATA_DIR}/user_patches
+		chown -R ${UID}:${GID} ${DATA_DIR}/user_patches
+	else
+		echo
+		echo "---Folder 'user_patches' found, please check if the patches in there are up-to-date---"
+	fi
+	echo
+	echo "------------------------------------------------------"
+	echo "----USER PATCHES --- USER PATCHES --- USER PATCHES----"
+	echo "------------------------------------------------------"
+	echo "-----User Patches are enabled, please place your -----"
+	echo "----*.patch files in the 'user_patches' folder in-----"
+	echo "-------the main directory and the container will------"
+	echo "---apply them at the build step, the folder will be---"
+	echo "-----deleted if cleanup 'moderate' or 'full' are------"
+	echo "-------selected, waiting additional 60 seconds!-------"
+	echo "------------------------------------------------------"
+	echo "----USER PATCHES --- USER PATCHES --- USER PATCHES----"
+	echo "------------------------------------------------------"
+	sleep 60
+fi
 sleep 60
 
 if [ "${BUILD_DVB}" == "true" ]; then
 	## Get latest version from DigitalDevices drivers
 	if [ "${DD_DRV_V}" == "latest" ]; then
-		echo "---Trying to get latest verson for DigitalDevices driver---"
+		echo "---Trying to get latest version for DigitalDevices driver---"
 		DD_DRV_V="$(curl -s https://api.github.com/repos/DigitalDevices/dddvb/releases/latest | grep tag_name | cut -d '"' -f4)"
 		if [ -z $DD_DRV_V ]; then
 			echo "---Can't get latest version for DigitalDevices driver, putting container into sleep mode!---"
@@ -98,7 +122,7 @@ if [ "${BUILD_DVB}" == "true" ]; then
 
 	## Get latest version from LibreELEC drivers
 	if [ "${LE_DRV_V}" == "latest" ]; then
-		echo "---Trying to get latest verson for LibreELEC driver---"
+		echo "---Trying to get latest version for LibreELEC driver---"
 		LE_DRV_V="$(curl -s https://api.github.com/repos/LibreELEC/dvb-firmware/releases/latest | grep tag_name | cut -d '"' -f4)"
 		if [ -z $LE_DRV_V ]; then
 			echo "---Can't get latest version for LibreELEC driver, putting container into sleep mode!---"
@@ -115,7 +139,7 @@ fi
 if [ "${BUILD_NVIDIA}" == "true" ]; then
 	## Get latest version from nVidia drivers
 	if [ "${NV_DRV_V}" == "latest" ]; then
-		echo "---Trying to get latest verson for nVidia driver---"
+		echo "---Trying to get latest version for nVidia driver---"
 		NV_DRV_V="$(curl -s http://download.nvidia.com/XFree86/Linux-x86_64/latest.txt | cut -d ' ' -f1)"
 		if [ -z $NV_DRV_V ]; then
 			echo "---Can't get latest version for nVidia driver, putting container into sleep mode!---"
@@ -128,7 +152,7 @@ if [ "${BUILD_NVIDIA}" == "true" ]; then
 
 	## Get latest version from Seccomp
 	if [ "${SECCOMP_V}" == "latest" ]; then
-		echo "---Trying to get latest verson for Seccomp---"
+		echo "---Trying to get latest version for Seccomp---"
 		SECCOMP_V="$(curl -s https://api.github.com/repos/seccomp/libseccomp/releases/latest | grep tag_name | cut -d '"' -f4 | cut -d 'v' -f2)"
 		if [ -z $SECCOMP_V ]; then
 			echo "---Can't get latest version for Seccomp, putting container into sleep mode!---"
@@ -141,7 +165,7 @@ if [ "${BUILD_NVIDIA}" == "true" ]; then
 
 	## Get latest version from 'nvidia-container-runtime'
 	if [ "${NVIDIA_CONTAINER_RUNTIME_V}" == "latest" ]; then
-		echo "---Trying to get latest verson for 'nvidia-container-runtime' driver---"
+		echo "---Trying to get latest version for 'nvidia-container-runtime' driver---"
 		NVIDIA_CONTAINER_RUNTIME_V="$(curl -s https://api.github.com/repos/NVIDIA/nvidia-container-runtime/releases/latest | grep tag_name | cut -d '"' -f4 | cut -d 'v' -f2)"
 		if [ -z $NVIDIA_CONTAINER_RUNTIME_V ]; then
 			echo "---Can't get latest version for 'nvidia-container-runtime', putting container into sleep mode!---"
@@ -154,7 +178,7 @@ if [ "${BUILD_NVIDIA}" == "true" ]; then
 
 	## Get latest version from 'nvidia-toolkit'
 	if [ "${CONTAINER_TOOLKIT_V}" == "latest" ]; then
-		echo "---Trying to get latest verson for 'nvidia-toolkit' driver---"
+		echo "---Trying to get latest version for 'nvidia-toolkit' driver---"
 		CONTAINER_TOOLKIT_V="$(curl -s https://api.github.com/repos/NVIDIA/container-toolkit/releases/latest | grep tag_name | cut -d '"' -f4 | cut -d 'v' -f2)"
 		if [ -z $CONTAINER_TOOLKIT_V ]; then
 			echo "---Can't get latest version for 'nvidia-toolkit', putting container into sleep mode!---"
@@ -167,7 +191,7 @@ if [ "${BUILD_NVIDIA}" == "true" ]; then
 
 	## Get latest version from 'libnvidia-container'
 	if [ "${LIBNVIDIA_CONTAINER_V}" == "latest" ]; then
-		echo "---Trying to get latest verson for 'libnvidia-container'---"
+		echo "---Trying to get latest version for 'libnvidia-container'---"
 		LIBNVIDIA_CONTAINER_V="$(curl -s https://api.github.com/repos/NVIDIA/libnvidia-container/releases/latest | grep tag_name | cut -d '"' -f4 | cut -d 'v' -f2)"
 		if [ -z $LIBNVIDIA_CONTAINER_V ]; then
 			echo "---Can't get latest version for 'libnvidia-container', putting container into sleep mode!---"
@@ -179,6 +203,28 @@ if [ "${BUILD_NVIDIA}" == "true" ]; then
 	fi
 else
 	echo "---Build of nVidia drivers/modules skipped!---"
+fi
+
+if [ "${BUILD_ZFS}" == "true" ]; then
+	## Get latest version from ZFS
+	if [ "${ZFS_V}" == "latest" ]; then
+		echo "---Trying to get latest version for ZFS---"
+		ZFS_V="$(curl -s https://api.github.com/repos/openzfs/zfs/releases/latest | grep tag_name | cut -d '"' -f4 | cut -d '-' -f2)"
+		if [ -z $ZFS_V ]; then
+			echo "---Can't get latest version for ZFS, putting container into sleep mode!---"
+			sleep infinity
+		fi
+		echo "---Latest version for ZFS: v$ZFS_V---"
+	else
+		echo "---ZFS version manually set to: v$ZFS_V---"
+	fi
+	if [ "$ZFS_V" -le 0.7 ]; then
+		echo "------------------------------------------------------------"
+		echo "---ZFS version set to v$ZFS_V, compiling for ZFS versions---"
+		echo "----lower or equal to v0.7 not implemeted in this script----"
+		echo "------------------------------------------------------------"
+		sleep infinity
+	fi
 fi
 
 ## Check if images of Stock Unraid version are present or download them if default path is /usr/src/stock
@@ -198,7 +244,7 @@ if [ "$IMAGES_FILE_PATH" == "/usr/src/stock" ]; then
 			fi
 		elif [ ${DATA_DIR}/unRAIDServer-${UNRAID_V}-x86_64.zip ]; then
 			echo "---unRAIDServer-${UNRAID_V}-x86_64.zip found locally---"
-			mv ${DATA_DIR}/unRAIDServer-${UNRAID_V}-x86_64.zip ${DATA_DIR}/stock/${UNRAID_V}/unRAIDServer-${UNRAID_V}-x86_64.zip
+			cp ${DATA_DIR}/unRAIDServer-${UNRAID_V}-x86_64.zip ${DATA_DIR}/stock/${UNRAID_V}/unRAIDServer-${UNRAID_V}-x86_64.zip
 		fi
 		echo "---Extracting files---"
 		unzip -o ${DATA_DIR}/stock/${UNRAID_V}/unRAIDServer-${UNRAID_V}-x86_64.zip
@@ -260,8 +306,14 @@ else
 fi
 
 ## Copy patches & config to new Kernel directory
-echo "---Copying Patches and Config file to the Kernel---"
+echo "---Copying Patches and Config file to the Kernel directory---"
 rsync -av /host/usr/src/linux-*/ ${DATA_DIR}/linux-$UNAME
+
+## Copy user patches if enabled
+if [ "${USER_PATCHES}" == "true" ]; then
+	echo "---Copying patches from directory 'user_patches' to the Kernel directory---"
+	rsync -av ${DATA_DIR}/user_patches/ ${DATA_DIR}/linux-$UNAME
+fi
 
 ## Apply changes to .config
 if [ "${BUILD_DVB}" == "true" ]; then
@@ -278,6 +330,7 @@ if [ "${BUILD_DVB}" == "true" ]; then
 fi
 
 if [ "${BUILD_NVIDIA}" == "true" ]; then
+	cd ${DATA_DIR}/linux-$UNAME
 	echo "---Patching necessary files for 'joydev', this can take some time, please wait!---"
 	while read -r line
 	do
@@ -385,6 +438,33 @@ fi
 cd ${DATA_DIR}/bzroot-extracted-$UNAME
 dd if=$IMAGES_FILE_PATH/bzroot bs=512 count=$(cpio -ivt -H newc < $IMAGES_FILE_PATH/bzroot 2>&1 > /dev/null | awk '{print $1}') of=${DATA_DIR}/output-$UNAME/bzroot
 dd if=$IMAGES_FILE_PATH/bzroot bs=512 skip=$(cpio -ivt -H newc < $IMAGES_FILE_PATH/bzroot 2>&1 > /dev/null | awk '{print $1}') | xzcat | cpio -i -d -H newc --no-absolute-filenames
+
+if [ "${BUILD_ZFS}" == "true" ]; then
+	## Download and install ZFS
+	echo "---Downloading ZFS v${ZFS_V}, please wait!---"
+	cd ${DATA_DIR}
+	if [ ! -d ${DATA_DIR}/zfs-v${ZFS_V} ]; then
+		mkdir ${DATA_DIR}/zfs-v${ZFS_V}
+	fi
+	if [ ! -f ${DATA_DIR}/zfs-v${ZFS_V}.tar.gz ]; then
+		echo "---Downloading ZFS v${ZFS_V}, please wait!---"
+		if wget -q -nc --show-progress --progress=bar:force:noscroll -O ${DATA_DIR}/zfs-v${ZFS_V}.tar.gz https://github.com/openzfs/zfs/releases/download/zfs-${ZFS_V}/zfs-${ZFS_V}.tar.gz ; then
+			echo "---Successfully downloaded ZFS v${ZFS_V}---"
+		else
+			echo "---Download of ZFS v${ZFS_V} failed, putting container into sleep mode!---"
+			sleep infinity
+		fi
+	else
+		echo "---ZFS v${ZFS_V} found locally---"
+	fi
+	tar -C ${DATA_DIR}/zfs-v${ZFS_V} --strip-components=1 -xf ${DATA_DIR}/zfs-v${ZFS_V}.tar.gz
+	echo "---Compiling ZFS v$ZFS_V, this can take some time, please wait!---"
+	cd ${DATA_DIR}/zfs-v${ZFS_V}
+	${DATA_DIR}/zfs-v${ZFS_V}/autogen.sh
+	${DATA_DIR}/zfs-v${ZFS_V}/configure --prefix=${DATA_DIR}/bzroot-extracted-$UNAME --libdir=${DATA_DIR}/bzroot-extracted-$UNAME/lib --includedir=${DATA_DIR}/bzroot-extracted-$UNAME/usr/include --datarootdir=${DATA_DIR}/bzroot-extracted-$UNAME/usr/share --enable-linux-builtin=yes --with-linux=${DATA_DIR}/linux-$UNAME --with-linux-obj=${DATA_DIR}/linux-$UNAME
+	make -j${CPU_COUNT}
+	make install
+fi
 
 if [ "${BUILD_NVIDIA}" == "true" ]; then
 	## Nvidia Drivers & Kernel module installation
@@ -615,6 +695,9 @@ else
 		echo "-----DigitalDevices driver version: $DD_DRV_V-----"
 		echo "--------LibreELEC driver version: $LE_DRV_V--------"
 		echo "------Xbox One Digital TV Tuner firwmare-------"
+	fi
+	if [ "${BUILD_ZFS}" == "true" ]; then
+		echo "-------------ZFS version: $ZFS_V----------------"
 	fi
 fi
 echo "-----------------------------------------------"
