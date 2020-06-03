@@ -463,8 +463,9 @@ if [ "${BUILD_ZFS}" == "true" ]; then
 	${DATA_DIR}/zfs-v${ZFS_V}/configure --prefix=${DATA_DIR}/bzroot-extracted-$UNAME/usr
 	make -j${CPU_COUNT}
 	make install
+	## Import all existing ZFS Pools at boot
 	echo '/sbin/modprobe zfs' >> ${DATA_DIR}/bzroot-extracted-$UNAME/etc/rc.d/rc.modules.local
-	sed -i "/chmod +x \/var\/tmp\/go/a\ \ echo 'zpool import -a &' >> /var/tmp/go" ${DATA_DIR}/bzroot-extracted-$UNAME/etc/rc.d/rc.local
+	sed -i '/chmod +x \/var\/tmp\/go/a\ \ echo "# Import all existing ZFS Pools\nzpool import -a &" >> /var/tmp/go' /etc/rc.d/rc.local
 fi
 
 if [ "${BUILD_NVIDIA}" == "true" ]; then
