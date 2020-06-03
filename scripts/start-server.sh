@@ -302,7 +302,7 @@ if [ ! -f ${DATA_DIR}/linux-$CUR_K_V.tar.gz ]; then
 	tar -C ${DATA_DIR}/linux-$UNAME --strip-components=1 -xf ${DATA_DIR}/linux-$CUR_K_V.tar.gz
 else
 	echo "---Found Kernel v${UNAME%-*} locally, extracting, this can take some time, please wait!---"
-	tar -C ${DATA_DIR}/linux-$UNAME --strip-components=1 -xf linux-$CUR_K_V.tar.gz
+	tar -C ${DATA_DIR}/linux-$UNAME --strip-components=1 -xf ${DATA_DIR}/linux-$CUR_K_V.tar.gz
 fi
 
 ## Copy patches & config to new Kernel directory
@@ -460,10 +460,11 @@ if [ "${BUILD_ZFS}" == "true" ]; then
 	tar -C ${DATA_DIR}/zfs-v${ZFS_V} --strip-components=1 -xf ${DATA_DIR}/zfs-v${ZFS_V}.tar.gz
 	echo "---Compiling ZFS v$ZFS_V, this can take some time, please wait!---"
 	cd ${DATA_DIR}/zfs-v${ZFS_V}
-	${DATA_DIR}/zfs-v${ZFS_V}/autogen.sh
-	${DATA_DIR}/zfs-v${ZFS_V}/configure --prefix=${DATA_DIR}/bzroot-extracted-$UNAME --libdir=${DATA_DIR}/bzroot-extracted-$UNAME/lib --includedir=${DATA_DIR}/bzroot-extracted-$UNAME/usr/include --datarootdir=${DATA_DIR}/bzroot-extracted-$UNAME/usr/share --enable-linux-builtin=yes --with-linux=${DATA_DIR}/linux-$UNAME --with-linux-obj=${DATA_DIR}/linux-$UNAME
+	${DATA_DIR}/zfs-v${ZFS_V}/configure --prefix=${DATA_DIR}/bzroot-extracted-$UNAME/usr
 	make -j${CPU_COUNT}
 	make install
+	echo '/sbin/modprobe zfs' >> ${DATA_DIR}/bzroot-extracted-$UNAME/etc/rc.d/rc.modules.local
+	sed -i "/chmod +x \/var\/tmp\/go/a\ \ echo 'zpool import -a &' >> /var/tmp/go" ${DATA_DIR}/bzroot-extracted-$UNAME/etc/rc.d/rc.local
 fi
 
 if [ "${BUILD_NVIDIA}" == "true" ]; then
