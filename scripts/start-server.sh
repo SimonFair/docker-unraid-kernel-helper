@@ -257,6 +257,19 @@ if [ "$IMAGES_FILE_PATH" == "/usr/src/stock" ]; then
 	IMAGES_FILE_PATH=${DATA_DIR}/stock/${UNRAID_V}
 fi
 
+## Decompress bzroot
+echo "---Decompressing bzroot, this can take some time, please wait!---"
+if [ ! -d ${DATA_DIR}/bzroot-extracted-$UNAME ]; then
+	mkdir ${DATA_DIR}/bzroot-extracted-$UNAME
+fi
+if [ ! -f $IMAGES_FILE_PATH/bzroot ]; then
+	echo "---Can't find 'bzroot', check your configuration, putting container into sleep mode---"
+	sleep infinity
+fi
+cd ${DATA_DIR}/bzroot-extracted-$UNAME
+dd if=$IMAGES_FILE_PATH/bzroot bs=512 count=$(cpio -ivt -H newc < $IMAGES_FILE_PATH/bzroot 2>&1 > /dev/null | awk '{print $1}') of=${DATA_DIR}/output-$UNAME/bzroot
+dd if=$IMAGES_FILE_PATH/bzroot bs=512 skip=$(cpio -ivt -H newc < $IMAGES_FILE_PATH/bzroot 2>&1 > /dev/null | awk '{print $1}') | xzcat | cpio -i -d -H newc --no-absolute-filenames
+
 ## Create output folder
 if [ ! -d ${DATA_DIR}/output-$UNAME ]; then
 	mkdir ${DATA_DIR}/output-$UNAME
@@ -307,7 +320,7 @@ fi
 
 ## Copy patches & config to new Kernel directory
 echo "---Copying Patches and Config file to the Kernel directory---"
-rsync -av /host/usr/src/linux-*/ ${DATA_DIR}/linux-$UNAME
+rsync -av ${DATA_DIR}/bzroot-extracted-$UNAME/usr/src/linux-*/ ${DATA_DIR}/linux-$UNAME
 
 ## Copy user patches if enabled
 if [ "${USER_PATCHES}" == "true" ]; then
@@ -425,19 +438,6 @@ if [ "${BUILD_DVB}" == "true" ]; then
 	tar -C ${DATA_DIR}/lE-v${LE_DRV_V} --strip-components=1 -xf ${DATA_DIR}/lE-v${LE_DRV_V}.tar.gz
 	rsync -av ${DATA_DIR}/lE-v${LE_DRV_V}/firmware/ /lib/firmware/
 fi
-
-## Decompress bzroot
-echo "---Decompressing bzroot, this can take some time, please wait!---"
-if [ ! -d ${DATA_DIR}/bzroot-extracted-$UNAME ]; then
-	mkdir ${DATA_DIR}/bzroot-extracted-$UNAME
-fi
-if [ ! -f $IMAGES_FILE_PATH/bzroot ]; then
-	echo "---Can't find 'bzroot', check your configuration, putting container into sleep mode---"
-	sleep infinity
-fi
-cd ${DATA_DIR}/bzroot-extracted-$UNAME
-dd if=$IMAGES_FILE_PATH/bzroot bs=512 count=$(cpio -ivt -H newc < $IMAGES_FILE_PATH/bzroot 2>&1 > /dev/null | awk '{print $1}') of=${DATA_DIR}/output-$UNAME/bzroot
-dd if=$IMAGES_FILE_PATH/bzroot bs=512 skip=$(cpio -ivt -H newc < $IMAGES_FILE_PATH/bzroot 2>&1 > /dev/null | awk '{print $1}') | xzcat | cpio -i -d -H newc --no-absolute-filenames
 
 if [ "${BUILD_ZFS}" == "true" ]; then
 	## Download and install ZFS
