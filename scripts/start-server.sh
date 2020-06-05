@@ -257,6 +257,11 @@ if [ "$IMAGES_FILE_PATH" == "/usr/src/stock" ]; then
 	IMAGES_FILE_PATH=${DATA_DIR}/stock/${UNRAID_V}
 fi
 
+## Create output folder
+if [ ! -d ${DATA_DIR}/output-$UNAME ]; then
+	mkdir ${DATA_DIR}/output-$UNAME
+fi
+
 ## Decompress bzroot
 echo "---Decompressing bzroot, this can take some time, please wait!---"
 if [ ! -d ${DATA_DIR}/bzroot-extracted-$UNAME ]; then
@@ -269,11 +274,6 @@ fi
 cd ${DATA_DIR}/bzroot-extracted-$UNAME
 dd if=$IMAGES_FILE_PATH/bzroot bs=512 count=$(cpio -ivt -H newc < $IMAGES_FILE_PATH/bzroot 2>&1 > /dev/null | awk '{print $1}') of=${DATA_DIR}/output-$UNAME/bzroot
 dd if=$IMAGES_FILE_PATH/bzroot bs=512 skip=$(cpio -ivt -H newc < $IMAGES_FILE_PATH/bzroot 2>&1 > /dev/null | awk '{print $1}') | xzcat | cpio -i -d -H newc --no-absolute-filenames
-
-## Create output folder
-if [ ! -d ${DATA_DIR}/output-$UNAME ]; then
-	mkdir ${DATA_DIR}/output-$UNAME
-fi
 
 ## Preparing directorys modules and firmware
 if [ -d /lib/modules ]; then
