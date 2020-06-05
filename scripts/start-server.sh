@@ -465,7 +465,7 @@ if [ "${BUILD_ZFS}" == "true" ]; then
 	make install
 	## Load Kernel Module and patch 'go' file on startup to load all existing ZFS Pools
 	echo '/sbin/modprobe zfs' >> ${DATA_DIR}/bzroot-extracted-$UNAME/etc/rc.d/rc.modules.local
-	sed -i '/chmod +x \/var\/tmp\/go/a\ \ echo "# Import all existing ZFS Pools\nzpool import -a &" >> /var/tmp/go' /etc/rc.d/rc.local
+	sed -i '/chmod +x \/var\/tmp\/go/a\ \ echo "# Import all existing ZFS Pools\nzpool import -a &" >> /var/tmp/go' ${DATA_DIR}/bzroot-extracted-$UNAME/etc/rc.d/rc.local
 fi
 
 if [ "${BUILD_NVIDIA}" == "true" ]; then
