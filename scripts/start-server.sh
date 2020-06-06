@@ -437,6 +437,25 @@ if [ "${BUILD_DVB}" == "true" ]; then
 	fi
 	tar -C ${DATA_DIR}/lE-v${LE_DRV_V} --strip-components=1 -xf ${DATA_DIR}/lE-v${LE_DRV_V}.tar.gz
 	rsync -av ${DATA_DIR}/lE-v${LE_DRV_V}/firmware/ /lib/firmware/
+
+	## Downloading and compiling TBS OpenSource drivers
+	## https://github.com/tbsdtv
+	echo "---Downloading TBS OpenSource drivers, please wait!---"
+	cd ${DATA_DIR}
+	if [ ! -d ${DATA_DIR}/TBS-OpenSource ]; then
+		mkdir ${DATA_DIR}/TBS-OpenSource
+	fi
+	git clone https://github.com/tbsdtv/media_build.git
+	cd ${DATA_DIR}/TBS-OpenSource/media_build
+	git checkout master
+	cd ${DATA_DIR}/TBS-OpenSource
+	git clone https://github.com/tbsdtv/linux_media.git --depth=1
+	cd ${DATA_DIR}/TBS-OpenSource/linux_media
+	git checkout latest
+	cd ${DATA_DIR}/TBS-OpenSource/media_build
+	${DATA_DIR}/TBS-OpenSource/linux_media
+	make -j${CPU_COUNT}
+	make install
 fi
 
 if [ "${BUILD_ZFS}" == "true" ]; then
@@ -685,7 +704,7 @@ else
 	echo "---The images were built with the following----"
 	echo "------build options and version numbers:-------"
 	if [ "${BUILD_NVIDIA}" == "true" ]; then
-		echo "--------nVidia driver version: $NV_DRV_V---------"
+		echo "--------nVidia driver version: $NV_DRV_V----------"
 		echo "------lib-nvidia-container version: $LIBNVIDIA_CONTAINER_V------"
 		echo "----nvidia-container-runtime version: $NVIDIA_CONTAINER_RUNTIME_V----"
 		if [ "${NVIDIA_CONTAINER_RUNTIME_V//./}" -ge "320" ]; then
@@ -697,6 +716,7 @@ else
 		echo "-----DigitalDevices driver version: $DD_DRV_V-----"
 		echo "--------LibreELEC driver version: $LE_DRV_V--------"
 		echo "------Xbox One Digital TV Tuner firwmare-------"
+		echo "-----------TBS Open Source drivers-------------"
 	fi
 	if [ "${BUILD_ZFS}" == "true" ]; then
 		echo "-------------ZFS version: $ZFS_V----------------"
