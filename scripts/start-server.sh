@@ -453,7 +453,7 @@ if [ "${BUILD_DVB}" == "true" ]; then
 	cd ${DATA_DIR}/TBS-OpenSource/linux_media
 	git checkout latest
 	cd ${DATA_DIR}/TBS-OpenSource/media_build
-	${DATA_DIR}/TBS-OpenSource/linux_media
+	make dir DIR=../linux_media
 	make -j${CPU_COUNT}
 	make install
 fi
