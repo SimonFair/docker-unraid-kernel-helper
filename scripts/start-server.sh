@@ -445,6 +445,7 @@ if [ "${BUILD_DVB}" == "true" ]; then
 	if [ ! -d ${DATA_DIR}/TBS-OpenSource ]; then
 		mkdir ${DATA_DIR}/TBS-OpenSource
 	fi
+	cd ${DATA_DIR}/TBS-OpenSource
 	git clone https://github.com/tbsdtv/media_build.git
 	cd ${DATA_DIR}/TBS-OpenSource/media_build
 	git checkout master
