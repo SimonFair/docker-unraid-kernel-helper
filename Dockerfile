@@ -3,7 +3,7 @@ FROM ich777/debian-baseimage
 LABEL maintainer="admin@minenet.at"
 
 RUN	apt-get update && \
-	apt-get -y install nano make gcc bison flex bc libelf-dev lzma squashfs-tools xz-utils patch build-essential kmod cpio libncurses5-dev unzip rsync git curl bmake lsb-release libseccomp-dev libcap-dev pkg-config patchutils uuid-dev libblkid-dev libssl-dev dh-autoreconf libproc-processtable-perl && \
+	apt-get -y install nano make gcc bison flex bc libelf-dev lzma squashfs-tools xz-utils patch build-essential kmod cpio libncurses5-dev unzip rsync git curl bmake lsb-release libseccomp-dev libcap-dev pkg-config patchutils uuid-dev libblkid-dev libssl-dev dh-autoreconf libproc-processtable-perl beep zip && \
 	cd /tmp && \
 	wget -q -nc --show-progress --progress=bar:force:noscroll -O go.tar.gz https://dl.google.com/go/go1.14.3.linux-amd64.tar.gz && \
 	tar -C /usr/local -xvzf go.tar.gz && \
@@ -12,9 +12,10 @@ RUN	apt-get update && \
 	rm -rf /var/lib/apt/lists/*
 
 ENV DATA_DIR="/usr/src"
-ENV UNRAID_V=6.8.3
+ENV UNRAID_V=6.9.0
 ENV PATH=$PATH:/usr/local/go/bin
 ENV GOPATH=/usr/src/go/
+ENV IMAGES_FILE_PATH="/usr/src/stock"
 ENV BUILD_DVB="true"
 ENV BUILD_NVIDIA="true"
 ENV BUILD_ZFS="false"
@@ -31,6 +32,8 @@ ENV ZFS_V="latest"
 ENV CLEANUP="full"
 ENV CREATE_BACKUP="true"
 ENV UNAME=""
+ENV BETA_BUILD=""
+ENV BEEP="true"
 ENV UMASK=000
 ENV UID=99
 ENV GID=100
