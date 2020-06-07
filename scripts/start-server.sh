@@ -1,10 +1,18 @@
 #!/bin/bash
 ## Setting build variables
-if [ -z "${UNAME}" ]; then
-	UNAME="$(uname -r)"
+if [ "${BETA_BUILD}" == "true" ]; then
+	if [ -z "${UNAME}" ]; then
+		UNAME="beta"
+	else
+		UNAME="${UNAME}+beta"
+	fi
+else
+	if [ -z "${UNAME}" ]; then
+		UNAME="stock"
+	else
+		UNAME="${UNAME}+stock"
+	fi
 fi
-CUR_K_V="$(echo $UNAME | cut -d '-' -f 1)"
-MAIN_V="$(echo $UNAME | cut -d '.' -f 1)"
 if [ "$CPU_COUNT" == "all" ];then
 	CPU_COUNT="$(grep -c ^processor /proc/cpuinfo)"
 	echo "---Setting compile cores to $CPU_COUNT---"
@@ -35,14 +43,14 @@ if [ "$CUSTOM_MODE" == "true" ]; then
 fi
 
 ## Check for old Kernel output folder, if found stop container
-if [ -d ${DATA_DIR}/output-$UNAME ]; then
+if [ -d ${DATA_DIR}/output-* ]; then
 	echo "-------------------------------------------------"
-	echo "---Found old Kernel output folder v${UNAME%-*}---"
+	echo "---------Found old Kernel output folder----------"
 	echo "----Please delte this folder and restart the-----"
 	echo "-------------container to continue!--------------"
 	echo "-------------------------------------------------"
-	chown -R ${UID}:${GID} ${DATA_DIR}/output-$UNAME
-	chmod -R ${DATA_PERM} ${DATA_DIR}/output-$UNAME
+	chown -R ${UID}:${GID} ${DATA_DIR}/output-*
+	chmod -R ${DATA_PERM} ${DATA_DIR}/output-*
 	sleep infinity
 fi
 
@@ -83,7 +91,7 @@ fi
 if [ "$USER_PATCHES" == "true" ]; then
 	if [ ! -d ${DATA_DIR}/user_patches ]; then
 		mkdir ${DATA_DIR}/user_patches
-		chmod -R ${DATA_DIR}/user_patches
+		chmod -R ${DATA_PERM} ${DATA_DIR}/user_patches
 		chown -R ${UID}:${GID} ${DATA_DIR}/user_patches
 	else
 		echo
@@ -103,6 +111,40 @@ if [ "$USER_PATCHES" == "true" ]; then
 	echo "----USER PATCHES --- USER PATCHES --- USER PATCHES----"
 	echo "------------------------------------------------------"
 	sleep 60
+fi
+if [ "${BETA_BUILD}" == "true" ]; then
+	if [ ! -d ${DATA_DIR}/stock/beta ]; then
+		mkdir -p ${DATA_DIR}/stock/beta
+		chmod -R ${DATA_PERM} ${DATA_DIR}/stock/beta
+		chown -R ${UID}:${GID} ${DATA_DIR}/stock/beta
+	   	echo
+		echo "-----------------------------------------------------"
+		echo "-----BETA BUILD ----- BETA BUILD ----- BETA BUILD----"
+		echo "------------------------------------------------------"
+		echo "---Beta Build mode enabled, please make sure that----"
+		echo "------you've placed the stock images (bzimage,-------"
+		echo "---bzroot, bzmodules, bzfirmware) of the preferred---"
+		echo "---Unraid Beta version into your 'stock/beta' folder---"
+		echo "------------Waiting additional 60 seconds------------"
+		echo "-----------------------------------------------------"
+		echo "-----BETA BUILD ----- BETA BUILD ----- BETA BUILD----"
+		echo "-----------------------------------------------------"
+		sleep 60
+	else
+		echo
+		echo "-----------------------------------------------------"
+		echo "-----BETA BUILD ----- BETA BUILD ----- BETA BUILD----"
+		echo "------------------------------------------------------"
+		echo "---Beta Build mode enabled, found old 'stock/beta'---"
+		echo "----folder, please make sure that these files are----"
+		echo "---the preferred Unraid Beta version that you want---"
+		echo "---to build, otherwise it builds the wrong version---"
+		echo "------------Waiting additional 60 seconds------------"
+		echo "-----------------------------------------------------"
+		echo "-----BETA BUILD ----- BETA BUILD ----- BETA BUILD----"
+		echo "-----------------------------------------------------"
+        sleep 60
+	fi
 fi
 sleep 60
 
@@ -218,7 +260,7 @@ if [ "${BUILD_ZFS}" == "true" ]; then
 	else
 		echo "---ZFS version manually set to: v$ZFS_V---"
 	fi
-	if [ "$ZFS_V" -le 0.7 ]; then
+	if [ "$ZFS_V" -le "0.7" ]; then
 		echo "------------------------------------------------------------"
 		echo "---ZFS version set to v$ZFS_V, compiling for ZFS versions---"
 		echo "----lower or equal to v0.7 not implemeted in this script----"
@@ -227,34 +269,51 @@ if [ "${BUILD_ZFS}" == "true" ]; then
 	fi
 fi
 
-## Check if images of Stock Unraid version are present or download them if default path is /usr/src/stock
-if [ "$IMAGES_FILE_PATH" == "/usr/src/stock" ]; then
-	if [ ! -d ${DATA_DIR}/stock/${UNRAID_V} ]; then
-		mkdir -p ${DATA_DIR}/stock/${UNRAID_V}
+## Check if Beta build mode is enabled and throw error if no images are found
+if [ "${BETA_BUILD}" == "true" ]; then
+	if [ ! -f ${DATA_DIR}/stock/beta/bzroot ] || [ ! -f ${DATA_DIR}/stock/beta/bzimage ] || [ ! -f ${DATA_DIR}/stock/beta/bzmodules ] || [ ! -f ${DATA_DIR}/stock/beta/bzfirmware ]; then
+		echo "----------------------------------------------------------"
+		echo "-----No stock images found, please extract the stock------"
+		echo "---Beta images (bzimage, bzroot, bzmodules, bzfirmware)---"
+		echo "---from the preferred Unraid Beta version in the folder---"
+		echo "-----'/stock/beta/' and restart the Container------"
+		echo "--------otherwise a build of the new images isn't---------"
+		echo "------possible, putting Container into sleep mode!--------"
+		echo "----------------------------------------------------------"
+		sleep infinity
+	else
+		IMAGES_FILE_PATH=${DATA_DIR}/stock/beta
 	fi
-	if [ ! -f ${DATA_DIR}/stock/${UNRAID_V}/bzroot ] || [ ! -f ${DATA_DIR}/stock/${UNRAID_V}/bzimage ] || [ ! -f ${DATA_DIR}/stock/${UNRAID_V}/bzmodules ] || [ ! -f ${DATA_DIR}/stock/${UNRAID_V}/bzfirmware ]; then
-		cd ${DATA_DIR}/stock/${UNRAID_V}
-		echo "---One or more Stock Unraid v${UNRAID_V} files not found, downloading...---"
-		if [ ! -f ${DATA_DIR}/unRAIDServer-${UNRAID_V}-x86_64.zip ]; then
-			if wget -q -nc --show-progress --progress=bar:force:noscroll -O ${DATA_DIR}/stock/${UNRAID_V}/unRAIDServer-${UNRAID_V}-x86_64.zip "https://s3.amazonaws.com/dnld.lime-technology.com/stable/unRAIDServer-${UNRAID_V}-x86_64.zip" ; then
-				echo "---Successfully downloaded Stock Unraid v${UNRAID_V}---"
-			else
-				echo "---Download of Stock Unraid v${UNRAID_V} failed, putting container into sleep mode!---"
-				sleep infinity
+else
+	## Check if images of Stock Unraid version are present or download them if default path is /usr/src/stock
+	if [ "$IMAGES_FILE_PATH" == "/usr/src/stock" ]; then
+		if [ ! -d ${DATA_DIR}/stock/${UNRAID_V} ]; then
+			mkdir -p ${DATA_DIR}/stock/${UNRAID_V}
+		fi
+		if [ ! -f ${DATA_DIR}/stock/${UNRAID_V}/bzroot ] || [ ! -f ${DATA_DIR}/stock/${UNRAID_V}/bzimage ] || [ ! -f ${DATA_DIR}/stock/${UNRAID_V}/bzmodules ] || [ ! -f ${DATA_DIR}/stock/${UNRAID_V}/bzfirmware ]; then
+			cd ${DATA_DIR}/stock/${UNRAID_V}
+			echo "---One or more Stock Unraid v${UNRAID_V} files not found, downloading...---"
+			if [ ! -f ${DATA_DIR}/unRAIDServer-${UNRAID_V}-x86_64.zip ]; then
+				if wget -q -nc --show-progress --progress=bar:force:noscroll -O ${DATA_DIR}/stock/${UNRAID_V}/unRAIDServer-${UNRAID_V}-x86_64.zip "https://s3.amazonaws.com/dnld.lime-technology.com/stable/unRAIDServer-${UNRAID_V}-x86_64.zip" ; then
+					echo "---Successfully downloaded Stock Unraid v${UNRAID_V}---"
+				else
+					echo "---Download of Stock Unraid v${UNRAID_V} failed, putting container into sleep mode!---"
+					sleep infinity
+				fi
+			elif [ ${DATA_DIR}/unRAIDServer-${UNRAID_V}-x86_64.zip ]; then
+				echo "---unRAIDServer-${UNRAID_V}-x86_64.zip found locally---"
+				cp ${DATA_DIR}/unRAIDServer-${UNRAID_V}-x86_64.zip ${DATA_DIR}/stock/${UNRAID_V}/unRAIDServer-${UNRAID_V}-x86_64.zip
 			fi
-		elif [ ${DATA_DIR}/unRAIDServer-${UNRAID_V}-x86_64.zip ]; then
-			echo "---unRAIDServer-${UNRAID_V}-x86_64.zip found locally---"
-			cp ${DATA_DIR}/unRAIDServer-${UNRAID_V}-x86_64.zip ${DATA_DIR}/stock/${UNRAID_V}/unRAIDServer-${UNRAID_V}-x86_64.zip
+			echo "---Extracting files---"
+			unzip -o ${DATA_DIR}/stock/${UNRAID_V}/unRAIDServer-${UNRAID_V}-x86_64.zip
+			if [ ! -f ${DATA_DIR}/unRAIDServer-${UNRAID_V}-x86_64.zip ]; then
+				mv ${DATA_DIR}/stock/${UNRAID_V}/unRAIDServer-${UNRAID_V}-x86_64.zip ${DATA_DIR}
+			fi
+			find . -maxdepth 1 -not -name 'bz*' -print0 | xargs -0 -I {} rm -R {} 2&>/dev/null
+			rm ${DATA_DIR}/stock/${UNRAID_V}/*.sha256
 		fi
-		echo "---Extracting files---"
-		unzip -o ${DATA_DIR}/stock/${UNRAID_V}/unRAIDServer-${UNRAID_V}-x86_64.zip
-		if [ ! -f ${DATA_DIR}/unRAIDServer-${UNRAID_V}-x86_64.zip ]; then
-			mv ${DATA_DIR}/stock/${UNRAID_V}/unRAIDServer-${UNRAID_V}-x86_64.zip ${DATA_DIR}
-		fi
-		find . -maxdepth 1 -not -name 'bz*' -print0 | xargs -0 -I {} rm -R {} 2&>/dev/null
-		rm ${DATA_DIR}/stock/${UNRAID_V}/*.sha256
+		IMAGES_FILE_PATH=${DATA_DIR}/stock/${UNRAID_V}
 	fi
-	IMAGES_FILE_PATH=${DATA_DIR}/stock/${UNRAID_V}
 fi
 
 ## Create output folder
@@ -298,24 +357,71 @@ if [ ! -f $IMAGES_FILE_PATH/bzfirmware ]; then
 fi
 unsquashfs -f -d /lib/firmware $IMAGES_FILE_PATH/bzfirmware
 
-## Download Kernel to data directory & extract it if not present
-cd ${DATA_DIR}
-if [ ! -d ${DATA_DIR}/linux-$UNAME ]; then
-	mkdir ${DATA_DIR}/linux-$UNAME
-fi
-if [ ! -f ${DATA_DIR}/linux-$CUR_K_V.tar.gz ]; then
-	echo "---Downloading Kernel v${UNAME%-*}---"
-	if wget -q -nc --show-progress --progress=bar:force:noscroll https://mirrors.edge.kernel.org/pub/linux/kernel/v$MAIN_V.x/linux-$CUR_K_V.tar.gz ; then
-		echo "---Successfully downloaded Kernel v${UNAME%-*}---"
+## Check if Beta build mode is enabled
+if [ "${BETA_BUILD}" == "true" ]; then
+	## Get Kernel versions depending on manually set or not
+	if [ "${UNAME}" == "beta" ]; then
+		UNAME="$(ls ${DATA_DIR}/bzroot-extracted-$UNAME/usr/src/ | cut -d '-' -f2,3 | cut -d '/' -f1)"
+		CUR_K_V="$(echo $UNAME | cut -d '-' -f 1)"
+		MAIN_V="$(echo $UNAME | cut -d '.' -f 1)"
 	else
-		echo "---Download of Kernel v${UNAME%-*} failed, putting container into sleep mode!---"
-		sleep infinity
+		UNAME="$(echo $UNAME | cut -d '+' -f1)"
+		CUR_K_V="$(echo $UNAME | cut -d '-' -f 1)"
+		MAIN_V="$(echo $UNAME | cut -d '.' -f 1)"
 	fi
-	echo "---Extracting Kernel v${UNAME%-*}, this can take some time, please wait!---"
-	tar -C ${DATA_DIR}/linux-$UNAME --strip-components=1 -xf ${DATA_DIR}/linux-$CUR_K_V.tar.gz
+	## Download Kernel to data directory & extract it if not present
+	cd ${DATA_DIR}
+	if [ ! -d ${DATA_DIR}/linux-$UNAME ]; then
+		mkdir ${DATA_DIR}/linux-$UNAME
+	fi
+	if [ ! -f ${DATA_DIR}/linux-$CUR_K_V.tar.gz ]; then
+		echo "---Downloading Kernel v${UNAME%-*}---"
+		if wget -q -nc --show-progress --progress=bar:force:noscroll https://mirrors.edge.kernel.org/pub/linux/kernel/v$MAIN_V.x/linux-$CUR_K_V.tar.gz ; then
+			echo "---Successfully downloaded Kernel v${UNAME%-*}---"
+		else
+			echo "---Download of Kernel v${UNAME%-*} failed, putting container into sleep mode!---"
+			sleep infinity
+		fi
+		echo "---Extracting Kernel v${UNAME%-*}, this can take some time, please wait!---"
+		tar -C ${DATA_DIR}/linux-$UNAME --strip-components=1 -xf ${DATA_DIR}/linux-$CUR_K_V.tar.gz
+	else
+		echo "---Found Kernel v${UNAME%-*} locally, extracting, this can take some time, please wait!---"
+		tar -C ${DATA_DIR}/linux-$UNAME --strip-components=1 -xf ${DATA_DIR}/linux-$CUR_K_V.tar.gz
+	fi
+	mv ${DATA_DIR}/bzroot-extracted* ${DATA_DIR}/bzroot-extracted-$UNAME
+	mv ${DATA_DIR}/output-* ${DATA_DIR}/output-$UNAME
 else
-	echo "---Found Kernel v${UNAME%-*} locally, extracting, this can take some time, please wait!---"
-	tar -C ${DATA_DIR}/linux-$UNAME --strip-components=1 -xf ${DATA_DIR}/linux-$CUR_K_V.tar.gz
+	## Get Kernel versions depending on manually set or not
+	if [ "${UNAME}" == "stock" ]; then
+		UNAME="$(ls ${DATA_DIR}/bzroot-extracted-$UNAME/usr/src/ | cut -d '-' -f2,3 | cut -d '/' -f1)"
+		CUR_K_V="$(echo $UNAME | cut -d '-' -f 1)"
+		MAIN_V="$(echo $UNAME | cut -d '.' -f 1)"
+	else
+		UNAME="$(echo $UNAME | cut -d '+' -f1)"
+		CUR_K_V="$(echo $UNAME | cut -d '-' -f 1)"
+		MAIN_V="$(echo $UNAME | cut -d '.' -f 1)"
+	fi
+	## Download Kernel to data directory & extract it if not present
+	cd ${DATA_DIR}
+	if [ ! -d ${DATA_DIR}/linux-$UNAME ]; then
+		mkdir ${DATA_DIR}/linux-$UNAME
+	fi
+	if [ ! -f ${DATA_DIR}/linux-$CUR_K_V.tar.gz ]; then
+		echo "---Downloading Kernel v${UNAME%-*}---"
+		if wget -q -nc --show-progress --progress=bar:force:noscroll https://mirrors.edge.kernel.org/pub/linux/kernel/v$MAIN_V.x/linux-$CUR_K_V.tar.gz ; then
+			echo "---Successfully downloaded Kernel v${UNAME%-*}---"
+		else
+			echo "---Download of Kernel v${UNAME%-*} failed, putting container into sleep mode!---"
+			sleep infinity
+		fi
+		echo "---Extracting Kernel v${UNAME%-*}, this can take some time, please wait!---"
+		tar -C ${DATA_DIR}/linux-$UNAME --strip-components=1 -xf ${DATA_DIR}/linux-$CUR_K_V.tar.gz
+	else
+		echo "---Found Kernel v${UNAME%-*} locally, extracting, this can take some time, please wait!---"
+		tar -C ${DATA_DIR}/linux-$UNAME --strip-components=1 -xf ${DATA_DIR}/linux-$CUR_K_V.tar.gz
+	fi
+	mv ${DATA_DIR}/bzroot-extracted* ${DATA_DIR}/bzroot-extracted-$UNAME
+	mv ${DATA_DIR}/output-* ${DATA_DIR}/output-$UNAME
 fi
 
 ## Copy patches & config to new Kernel directory
@@ -647,6 +753,17 @@ if [ -f ${DATA_DIR}/output-$UNAME/bzroot ]; then
 	sha256sum ${DATA_DIR}/output-$UNAME/bzroot > ${DATA_DIR}/output-$UNAME/bzroot.sha256
 fi
 
+## Make backup of Stock Beta files if Beta build is enabled
+if [ "${BETA_BUILD}" == "true" ]; then
+	echo "---Generating zip file of Stock Beta image files---"
+	cd ${DATA_DIR}/stock/beta
+	if [ -f ${DATA_DIR}/stock_beta_images.zip ]; then
+		echo "---Found file 'stock_beta_images.zip', removing and creating new---"
+		rm ${DATA_DIR}/stock_beta_images.zip
+	fi
+	zip -D ${DATA_DIR}/stock_beta_images.zip bzimage bzroot bzmodules bzfirmware
+fi
+
 ## Cleanup
 if [ "$CLEANUP" == "full" ]; then
 	echo "---Cleaning up, only output folder will be not deleted---"
@@ -737,3 +854,6 @@ echo "----MAKE SURE TO BACKUP YOUR OLD FILES FROM----"
 echo "----YOUR UNRAID USB STICK IN CASE SOMETHING----"
 echo "------WENT WRONG WITH THE KERNEL COMPILING-----"
 echo "-----------------------------------------------"
+if [ "${BEEP}" == "true" ]; then
+	beep -f 933 -l 300 -n -f 933 -l 100 -n -f 933 -l 100 -n -f 933 -l 100 -n -f 1047 -l 400
+fi
