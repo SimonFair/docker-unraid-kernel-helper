@@ -34,6 +34,20 @@ if [ "$CUSTOM_MODE" == "true" ]; then
 	sleep infinity
 fi
 
+## Check if BUILD_DVB is enabled, if so check if choice is valid
+if [ "${BUILD_DVB}" == "true" ]; then
+	if [[ "${DVB_TYPE}" != "libreelec" && "${DVB_TYPE}" != "digitaldevices" && "${DVB_TYPE}" != "tbsos" && "${DVB_TYPE}" != "xboxoneusb" ]]; then
+		echo "------------------------------------------------------"
+		echo "-----You've selecte to build the Kernel with DVB------"
+		echo "----but you've choosen none or no valid DVB Driver----"
+		echo "--------Valid choices are: 'libreelec', 'tbs',--------"
+		echo "---'xboxoneusb' or 'digitaldevices' without quotes----"
+		echo "---------Putting Container into sleep mode!-----------"
+		echo "------------------------------------------------------"
+		sleep infinity
+	fi
+fi
+
 ## Check for old Kernel output folder, if found stop container
 if [ -d ${DATA_DIR}/output-$UNAME ]; then
 	echo "-------------------------------------------------"
@@ -379,84 +393,92 @@ echo "---Copying Kernel Image to output folder---"
 cp ${DATA_DIR}/linux-$UNAME/arch/x86_64/boot/bzImage ${DATA_DIR}/output-$UNAME/bzimage
 
 if [ "${BUILD_DVB}" == "true" ]; then
-	## Download and install DigitalDevices drivers
-	echo "---Downloading DigitalDevices drivers v${DD_DRV_V}, please wait!---"
-	cd ${DATA_DIR}
-	if [ ! -d ${DATA_DIR}/dd-v${DD_DRV_V} ]; then
-		mkdir ${DATA_DIR}/dd-v${DD_DRV_V}
-	fi
-	if [ ! -f ${DATA_DIR}/dd-v${DD_DRV_V}.tar.gz ]; then
-		echo "---Downloading DigitalDevices driver v${DD_DRV_V}, please wait!---"
-		if wget -q -nc --show-progress --progress=bar:force:noscroll -O ${DATA_DIR}/dd-v${DD_DRV_V}.tar.gz https://github.com/DigitalDevices/dddvb/archive/${DD_DRV_V}.tar.gz ; then
-			echo "---Successfully downloaded DigitalDevices drivers v${DD_DRV_V}---"
+	if [ "${DVB_TYPE}" == "digitaldevices" ]; then
+		## Download and install DigitalDevices drivers
+		echo "---Downloading DigitalDevices drivers v${DD_DRV_V}, please wait!---"
+		cd ${DATA_DIR}
+		if [ ! -d ${DATA_DIR}/dd-v${DD_DRV_V} ]; then
+			mkdir ${DATA_DIR}/dd-v${DD_DRV_V}
+		fi
+		if [ ! -f ${DATA_DIR}/dd-v${DD_DRV_V}.tar.gz ]; then
+			echo "---Downloading DigitalDevices driver v${DD_DRV_V}, please wait!---"
+			if wget -q -nc --show-progress --progress=bar:force:noscroll -O ${DATA_DIR}/dd-v${DD_DRV_V}.tar.gz https://github.com/DigitalDevices/dddvb/archive/${DD_DRV_V}.tar.gz ; then
+				echo "---Successfully downloaded DigitalDevices drivers v${DD_DRV_V}---"
+			else
+				echo "---Download of DigitalDevices driver v${DD_DRV_V} failed, putting container into sleep mode!---"
+				sleep infinity
+			fi
 		else
-			echo "---Download of DigitalDevices driver v${DD_DRV_V} failed, putting container into sleep mode!---"
+			echo "---DigitalDevices driver v${DD_DRV_V} found locally---"
+		fi
+		tar -C ${DATA_DIR}/dd-v${DD_DRV_V} --strip-components=1 -xf ${DATA_DIR}/dd-v${DD_DRV_V}.tar.gz
+		cd ${DATA_DIR}/dd-v${DD_DRV_V}
+		make -j${CPU_COUNT}
+		make install
+	fi
+
+	if [ "${DVB_TYPE}" == "xboxoneusb" ]; then
+		## Download and install Xbox One Digital TV Tuner firwmare
+		## https://www.linuxtv.org/wiki/index.php/Xbox_One_Digital_TV_Tuner
+		cd /lib/firmware
+		if wget -q -nc --show-progress --progress=bar:force:noscroll "http://linuxtv.org/downloads/firmware/dvb-usb-dib0700-1.20.fw" ; then
+				echo "---Successfully downloaded Xbox One Digital TV Tuner firmware 'dvb-usb-dib0700-1.20.fw'---"
+		else
+			echo "---Download of Xbox One Digital TV Tuner firmware 'dvb-usb-dib0700-1.20.fw' failed, putting container into sleep mode!---"
 			sleep infinity
 		fi
-	else
-		echo "---DigitalDevices driver v${DD_DRV_V} found locally---"
-	fi
-	tar -C ${DATA_DIR}/dd-v${DD_DRV_V} --strip-components=1 -xf ${DATA_DIR}/dd-v${DD_DRV_V}.tar.gz
-	cd ${DATA_DIR}/dd-v${DD_DRV_V}
-	make -j${CPU_COUNT}
-	make install
-
-	## Download and install Xbox One Digital TV Tuner firwmare
-	## https://www.linuxtv.org/wiki/index.php/Xbox_One_Digital_TV_Tuner
-	cd /lib/firmware
-	if wget -q -nc --show-progress --progress=bar:force:noscroll "http://linuxtv.org/downloads/firmware/dvb-usb-dib0700-1.20.fw" ; then
-			echo "---Successfully downloaded Xbox One Digital TV Tuner firmware 'dvb-usb-dib0700-1.20.fw'---"
-	else
-		echo "---Download of Xbox One Digital TV Tuner firmware 'dvb-usb-dib0700-1.20.fw' failed, putting container into sleep mode!---"
-		sleep infinity
-	fi
-	if wget -q -nc --show-progress --progress=bar:force:noscroll "http://palosaari.fi/linux/v4l-dvb/firmware/MN88472/02/latest/dvb-demod-mn88472-02.fw" ; then
-			echo "---Successfully downloaded Xbox One Digital TV Tuner firmware 'dvb-demod-mn88472-02.fw'---"
-	else
-		echo "---Download of Xbox One Digital TV Tuner firmware 'dvb-demod-mn88472-02.fw' failed, putting container into sleep mode!---"
-		sleep infinity
-	fi
-
-	## Download and install LibreELEC drivers
-	## https://github.com/LibreELEC/dvb-firmware
-	echo "---Downloading LibreELEC drivers v${LE_DRV_V}, please wait!---"
-	cd ${DATA_DIR}
-	if [ ! -d ${DATA_DIR}/lE-v${LE_DRV_V} ]; then
-		mkdir ${DATA_DIR}/lE-v${LE_DRV_V}
-	fi
-	if [ ! -f ${DATA_DIR}/lE-v${LE_DRV_V}.tar.gz ]; then
-		echo "---Downloading LibreELEC driver v${LE_DRV_V}, please wait!---"
-		if wget -q -nc --show-progress --progress=bar:force:noscroll -O ${DATA_DIR}/lE-v${LE_DRV_V}.tar.gz https://github.com/LibreELEC/dvb-firmware/archive/${LE_DRV_V}.tar.gz ; then
-			echo "---Successfully downloaded LibreELEC drivers v${LE_DRV_V}---"
+		if wget -q -nc --show-progress --progress=bar:force:noscroll "http://palosaari.fi/linux/v4l-dvb/firmware/MN88472/02/latest/dvb-demod-mn88472-02.fw" ; then
+				echo "---Successfully downloaded Xbox One Digital TV Tuner firmware 'dvb-demod-mn88472-02.fw'---"
 		else
-			echo "---Download of LibreELEC driver v${LE_DRV_V} failed, putting container into sleep mode!---"
+			echo "---Download of Xbox One Digital TV Tuner firmware 'dvb-demod-mn88472-02.fw' failed, putting container into sleep mode!---"
 			sleep infinity
 		fi
-	else
-		echo "---LibreELEC driver v${LE_DRV_V} found locally---"
-	fi
-	tar -C ${DATA_DIR}/lE-v${LE_DRV_V} --strip-components=1 -xf ${DATA_DIR}/lE-v${LE_DRV_V}.tar.gz
-	rsync -av ${DATA_DIR}/lE-v${LE_DRV_V}/firmware/ /lib/firmware/
+	if
 
-	## Downloading and compiling TBS OpenSource drivers
-	## https://github.com/tbsdtv
-	echo "---Downloading TBS OpenSource drivers, please wait!---"
-	cd ${DATA_DIR}
-	if [ ! -d ${DATA_DIR}/TBS-OpenSource ]; then
-		mkdir ${DATA_DIR}/TBS-OpenSource
+	if [ "${DVB_TYPE}" == "libreelec" ]; then
+		## Download and install LibreELEC drivers
+		## https://github.com/LibreELEC/dvb-firmware
+		echo "---Downloading LibreELEC drivers v${LE_DRV_V}, please wait!---"
+		cd ${DATA_DIR}
+		if [ ! -d ${DATA_DIR}/lE-v${LE_DRV_V} ]; then
+			mkdir ${DATA_DIR}/lE-v${LE_DRV_V}
+		fi
+		if [ ! -f ${DATA_DIR}/lE-v${LE_DRV_V}.tar.gz ]; then
+			echo "---Downloading LibreELEC driver v${LE_DRV_V}, please wait!---"
+			if wget -q -nc --show-progress --progress=bar:force:noscroll -O ${DATA_DIR}/lE-v${LE_DRV_V}.tar.gz https://github.com/LibreELEC/dvb-firmware/archive/${LE_DRV_V}.tar.gz ; then
+				echo "---Successfully downloaded LibreELEC drivers v${LE_DRV_V}---"
+			else
+				echo "---Download of LibreELEC driver v${LE_DRV_V} failed, putting container into sleep mode!---"
+				sleep infinity
+			fi
+		else
+			echo "---LibreELEC driver v${LE_DRV_V} found locally---"
+		fi
+		tar -C ${DATA_DIR}/lE-v${LE_DRV_V} --strip-components=1 -xf ${DATA_DIR}/lE-v${LE_DRV_V}.tar.gz
+		rsync -av ${DATA_DIR}/lE-v${LE_DRV_V}/firmware/ /lib/firmware/
 	fi
-	cd ${DATA_DIR}/TBS-OpenSource
-	git clone https://github.com/tbsdtv/media_build.git
-	cd ${DATA_DIR}/TBS-OpenSource/media_build
-	git checkout master
-	cd ${DATA_DIR}/TBS-OpenSource
-	git clone https://github.com/tbsdtv/linux_media.git --depth=1
-	cd ${DATA_DIR}/TBS-OpenSource/linux_media
-	git checkout latest
-	cd ${DATA_DIR}/TBS-OpenSource/media_build
-	make dir DIR=../linux_media
-	make -j${CPU_COUNT}
-	make install
+
+	if [ "${DVB_TYPE}" == "tbsos" ]; then
+		## Downloading and compiling TBS OpenSource drivers
+		## https://github.com/tbsdtv
+		echo "---Downloading TBS OpenSource drivers, please wait!---"
+		cd ${DATA_DIR}
+		if [ ! -d ${DATA_DIR}/TBS-OpenSource ]; then
+			mkdir ${DATA_DIR}/TBS-OpenSource
+		fi
+		cd ${DATA_DIR}/TBS-OpenSource
+		git clone https://github.com/tbsdtv/media_build.git
+		cd ${DATA_DIR}/TBS-OpenSource/media_build
+		git checkout master
+		cd ${DATA_DIR}/TBS-OpenSource
+		git clone https://github.com/tbsdtv/linux_media.git --depth=1
+		cd ${DATA_DIR}/TBS-OpenSource/linux_media
+		git checkout latest
+		cd ${DATA_DIR}/TBS-OpenSource/media_build
+		make dir DIR=../linux_media
+		make -j${CPU_COUNT}
+		make install
+	fi
 fi
 
 if [ "${BUILD_ZFS}" == "true" ]; then
@@ -714,10 +736,18 @@ else
 		echo "------------Seccomp version: $SECCOMP_V-------------"
 	fi
 	if [ "${BUILD_DVB}" == "true" ]; then
-		echo "-----DigitalDevices driver version: $DD_DRV_V-----"
-		echo "--------LibreELEC driver version: $LE_DRV_V--------"
-		echo "------Xbox One Digital TV Tuner firwmare-------"
-		echo "-----------TBS Open Source drivers-------------"
+		if [ "${DVB_TYPE}" == "digitaldevices" ]; then
+			echo "-----DigitalDevices driver version: $DD_DRV_V-----"
+		fi
+		if [ "${DVB_TYPE}" == "libreelec" ]; then
+			echo "--------LibreELEC driver version: $LE_DRV_V--------"
+		fi
+		if [ "${DVB_TYPE}" == "xboxoneusb" ]; then
+			echo "------Xbox One Digital TV Tuner firwmare-------"
+		fi
+		if [ "${DVB_TYPE}" == "tbsos" ]; then
+			echo "-----------TBS Open Source drivers-------------"
+		fi
 	fi
 	if [ "${BUILD_ZFS}" == "true" ]; then
 		echo "-------------ZFS version: $ZFS_V----------------"
