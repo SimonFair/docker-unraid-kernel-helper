@@ -521,9 +521,7 @@ if [ "${BUILD_DVB}" == "true" ]; then
 		cd ${DATA_DIR}/dd-v${DD_DRV_V}
 		make -j${CPU_COUNT}
 		make install
-	fi
-
-	if [ "${DVB_TYPE}" == "xboxoneusb" ]; then
+	elif [ "${DVB_TYPE}" == "xboxoneusb" ]; then
 		## Download and install Xbox One Digital TV Tuner firwmare
 		## https://www.linuxtv.org/wiki/index.php/Xbox_One_Digital_TV_Tuner
 		cd /lib/firmware
@@ -539,9 +537,7 @@ if [ "${BUILD_DVB}" == "true" ]; then
 			echo "---Download of Xbox One Digital TV Tuner firmware 'dvb-demod-mn88472-02.fw' failed, putting container into sleep mode!---"
 			sleep infinity
 		fi
-	if
-
-	if [ "${DVB_TYPE}" == "libreelec" ]; then
+	elif [ "${DVB_TYPE}" == "libreelec" ]; then
 		## Download and install LibreELEC drivers
 		## https://github.com/LibreELEC/dvb-firmware
 		echo "---Downloading LibreELEC drivers v${LE_DRV_V}, please wait!---"
@@ -562,9 +558,7 @@ if [ "${BUILD_DVB}" == "true" ]; then
 		fi
 		tar -C ${DATA_DIR}/lE-v${LE_DRV_V} --strip-components=1 -xf ${DATA_DIR}/lE-v${LE_DRV_V}.tar.gz
 		rsync -av ${DATA_DIR}/lE-v${LE_DRV_V}/firmware/ /lib/firmware/
-	fi
-
-	if [ "${DVB_TYPE}" == "tbsos" ]; then
+	elif [ "${DVB_TYPE}" == "tbsos" ]; then
 		## Downloading and compiling TBS OpenSource drivers
 		## https://github.com/tbsdtv
 		echo "---Downloading TBS OpenSource drivers, please wait!---"
@@ -855,14 +849,11 @@ else
 	if [ "${BUILD_DVB}" == "true" ]; then
 		if [ "${DVB_TYPE}" == "digitaldevices" ]; then
 			echo "-----DigitalDevices driver version: $DD_DRV_V-----"
-		fi
-		if [ "${DVB_TYPE}" == "libreelec" ]; then
+		elif [ "${DVB_TYPE}" == "libreelec" ]; then
 			echo "--------LibreELEC driver version: $LE_DRV_V--------"
-		fi
-		if [ "${DVB_TYPE}" == "xboxoneusb" ]; then
+		elif [ "${DVB_TYPE}" == "xboxoneusb" ]; then
 			echo "------Xbox One Digital TV Tuner firwmare-------"
-		fi
-		if [ "${DVB_TYPE}" == "tbsos" ]; then
+		elif [ "${DVB_TYPE}" == "tbsos" ]; then
 			echo "-----------TBS Open Source drivers-------------"
 		fi
 	fi
