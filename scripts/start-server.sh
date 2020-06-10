@@ -40,7 +40,7 @@ if [ "${BUILD_DVB}" == "true" ]; then
 		echo "------------------------------------------------------"
 		echo "-----You've selecte to build the Kernel with DVB------"
 		echo "----but you've choosen none or no valid DVB Driver----"
-		echo "--------Valid choices are: 'libreelec', 'tbs',--------"
+		echo "-------Valid choices are: 'libreelec', 'tbsos',-------"
 		echo "---'xboxoneusb' or 'digitaldevices' without quotes----"
 		echo "---------Putting Container into sleep mode!-----------"
 		echo "------------------------------------------------------"
