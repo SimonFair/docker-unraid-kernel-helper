@@ -16,6 +16,7 @@ ENV UNRAID_V=6.8.3
 ENV PATH=$PATH:/usr/local/go/bin
 ENV GOPATH=/usr/src/go/
 ENV BUILD_DVB="true"
+ENV DVB_TYPE="libreelec"
 ENV BUILD_NVIDIA="true"
 ENV BUILD_ZFS="false"
 ENV LIBNVIDIA_CONTAINER_V="latest"
