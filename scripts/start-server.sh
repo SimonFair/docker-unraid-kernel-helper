@@ -356,7 +356,7 @@ if [ "${BUILD_DVB}" == "true" ]; then
 	done < "${DATA_DIR}/deps/dvb.list"
 fi
 
-if [ "${BUILD_NVIDIA}" == "true" ]; then
+if [ "${BUILD_JOYDEV}" == "true" ]; then
 	cd ${DATA_DIR}/linux-$UNAME
 	echo "---Patching necessary files for 'joydev', this can take some time, please wait!---"
 	while read -r line
