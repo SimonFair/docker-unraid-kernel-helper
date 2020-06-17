@@ -272,14 +272,12 @@ if [ "${BUILD_ZFS}" == "true" ]; then
 		fi
 		echo "---Latest version for ZFS: v$ZFS_V---"
 	else
+		echo "------------------------------------------"
 		echo "---ZFS version manually set to: v$ZFS_V---"
-	fi
-	if [ "$ZFS_V" -le "0.7" ]; then
-		echo "------------------------------------------------------------"
-		echo "---ZFS version set to v$ZFS_V, compiling for ZFS versions---"
-		echo "----lower or equal to v0.7 not implemeted in this script----"
-		echo "------------------------------------------------------------"
-		sleep infinity
+		echo "----Please note that compiling of equal---"
+		echo "---or lower than v0.7 isn't implemented---"
+		echo "------------------------------------------"
+		sleep 10
 	fi
 fi
 
