@@ -609,22 +609,26 @@ if [ "${BUILD_ZFS}" == "true" ]; then
 fi
 
 if [ "${BUILD_NVIDIA}" == "true" ]; then
-	## Nvidia Drivers & Kernel module installation
-	cd ${DATA_DIR}
-	if [ ! -f ${DATA_DIR}/NVIDIA_v${NV_DRV_V}.run ]; then
-		echo "---Downloading nVidia driver v${NV_DRV_V}, please wait!---"
-		if wget -q -nc --show-progress --progress=bar:force:noscroll -O ${DATA_DIR}/NVIDIA_v${NV_DRV_V}.run http://download.nvidia.com/XFree86/Linux-x86_64/${NV_DRV_V}/NVIDIA-Linux-x86_64-${NV_DRV_V}.run ; then
-			echo "---Successfully downloaded nVidia driver v${NV_DRV_V}---"
+	if [ "${NV_DRV_V}" == "440.82" ]; then
+		echo "---Installing and applying nVidia driver patch v440.82---"
+		cd ${DATA_DIR}
+		if [ ! -f ${DATA_DIR}/NVIDIA_v${NV_DRV_V}.run ]; then
+			echo "---Downloading nVidia driver v${NV_DRV_V}, please wait!---"
+			if wget -q -nc --show-progress --progress=bar:force:noscroll -O ${DATA_DIR}/NVIDIA_v${NV_DRV_V}.run http://download.nvidia.com/XFree86/Linux-x86_64/${NV_DRV_V}/NVIDIA-Linux-x86_64-${NV_DRV_V}.run ; then
+				echo "---Successfully downloaded nVidia driver v${NV_DRV_V}---"
+			else
+				echo "---Download of nVidia driver v${NV_DRV_V} failed, putting container into sleep mode!---"
+				sleep infinity
+			fi
 		else
-			echo "---Download of nVidia driver v${NV_DRV_V} failed, putting container into sleep mode!---"
-			sleep infinity
+			echo "---nVidia driver v${NV_DRV_V} found locally---"
 		fi
-	else
-		echo "---nVidia driver v${NV_DRV_V} found locally---"
-	fi
-	chmod +x ${DATA_DIR}/NVIDIA_v${NV_DRV_V}.run
-	echo "---Installing nVidia Driver and Kernel Module v${NV_DRV_V}, please wait!---"
-	${DATA_DIR}/NVIDIA_v${NV_DRV_V}.run --kernel-name=$UNAME \
+		chmod +x ${DATA_DIR}/NVIDIA_v${NV_DRV_V}.run
+		wget -O kernel-5.7.patch https://gitlab.com/snippets/1965550/raw
+		${DATA_DIR}/NVIDIA_v440.82.run -x
+		cd ${DATA_DIR}/NVIDIA-Linux-x86_64-440.82
+		patch -p1 -i ../kernel-5.7.patch
+		${DATA_DIR}/NVIDIA-Linux-x86_64-440.82/nvidia-installer --kernel-name=$UNAME \
 		--no-precompiled-interface \
 		--disable-nouveau \
 		--x-library-path=${DATA_DIR}/bzroot-extracted-$UNAME/usr \
@@ -637,6 +641,36 @@ if [ "${BUILD_NVIDIA}" == "true" ]; then
 		--compat32-libdir=${DATA_DIR}/bzroot-extracted-$UNAME/usr/lib \
 		--j${CPU_COUNT} \
 		--silent
+	else
+		## Nvidia Drivers & Kernel module installation
+		cd ${DATA_DIR}
+		if [ ! -f ${DATA_DIR}/NVIDIA_v${NV_DRV_V}.run ]; then
+			echo "---Downloading nVidia driver v${NV_DRV_V}, please wait!---"
+			if wget -q -nc --show-progress --progress=bar:force:noscroll -O ${DATA_DIR}/NVIDIA_v${NV_DRV_V}.run http://download.nvidia.com/XFree86/Linux-x86_64/${NV_DRV_V}/NVIDIA-Linux-x86_64-${NV_DRV_V}.run ; then
+				echo "---Successfully downloaded nVidia driver v${NV_DRV_V}---"
+			else
+				echo "---Download of nVidia driver v${NV_DRV_V} failed, putting container into sleep mode!---"
+				sleep infinity
+			fi
+		else
+			echo "---nVidia driver v${NV_DRV_V} found locally---"
+		fi
+		chmod +x ${DATA_DIR}/NVIDIA_v${NV_DRV_V}.run
+		echo "---Installing nVidia Driver and Kernel Module v${NV_DRV_V}, please wait!---"
+		${DATA_DIR}/NVIDIA_v${NV_DRV_V}.run --kernel-name=$UNAME \
+			--no-precompiled-interface \
+			--disable-nouveau \
+			--x-library-path=${DATA_DIR}/bzroot-extracted-$UNAME/usr \
+			--opengl-prefix=${DATA_DIR}/bzroot-extracted-$UNAME/usr \
+			--installer-prefix=${DATA_DIR}/bzroot-extracted-$UNAME/usr \
+			--utility-prefix=${DATA_DIR}/bzroot-extracted-$UNAME/usr \
+			--documentation-prefix=${DATA_DIR}/bzroot-extracted-$UNAME/usr \
+			--application-profile-path=${DATA_DIR}/bzroot-extracted-$UNAME/usr/share \
+			--proc-mount-point=${DATA_DIR}/bzroot-extracted-$UNAME/proc \
+			--compat32-libdir=${DATA_DIR}/bzroot-extracted-$UNAME/usr/lib \
+			--j${CPU_COUNT} \
+			--silent
+	fi
 
 	## Copying 'nvidia-modprobe' and OpenCL icd
 	cp /usr/bin/nvidia-modprobe ${DATA_DIR}/bzroot-extracted-$UNAME/usr/bin/
