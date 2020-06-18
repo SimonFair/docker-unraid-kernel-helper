@@ -624,7 +624,7 @@ if [ "${BUILD_NVIDIA}" == "true" ]; then
 			echo "---nVidia driver v${NV_DRV_V} found locally---"
 		fi
 		chmod +x ${DATA_DIR}/NVIDIA_v${NV_DRV_V}.run
-		wget -O kernel-5.7.patch https://gitlab.com/snippets/1965550/raw
+		wget -nc -O kernel-5.7.patch https://gitlab.com/snippets/1965550/raw
 		${DATA_DIR}/NVIDIA_v440.82.run -x
 		cd ${DATA_DIR}/NVIDIA-Linux-x86_64-440.82
 		patch -p1 -i ../kernel-5.7.patch
