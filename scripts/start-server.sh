@@ -271,6 +271,8 @@ if [ "${BUILD_ZFS}" == "true" ]; then
 			sleep infinity
 		fi
 		echo "---Latest version for ZFS: v$ZFS_V---"
+	elif [ "${ZFS_V}" == "master" ]; then
+		echo "---ZFS will be builded from latest OpenZFS branch on Github---"
 	else
 		echo "------------------------------------------"
 		echo "---ZFS version manually set to: v$ZFS_V---"
@@ -581,31 +583,43 @@ fi
 
 if [ "${BUILD_ZFS}" == "true" ]; then
 	## Download and install ZFS
-	echo "---Downloading ZFS v${ZFS_V}, please wait!---"
-	cd ${DATA_DIR}
-	if [ ! -d ${DATA_DIR}/zfs-v${ZFS_V} ]; then
-		mkdir ${DATA_DIR}/zfs-v${ZFS_V}
-	fi
-	if [ ! -f ${DATA_DIR}/zfs-v${ZFS_V}.tar.gz ]; then
+	if [ "${ZFS_V}" == "latest" ]; then
 		echo "---Downloading ZFS v${ZFS_V}, please wait!---"
-		if wget -q -nc --show-progress --progress=bar:force:noscroll -O ${DATA_DIR}/zfs-v${ZFS_V}.tar.gz https://github.com/openzfs/zfs/releases/download/zfs-${ZFS_V}/zfs-${ZFS_V}.tar.gz ; then
-			echo "---Successfully downloaded ZFS v${ZFS_V}---"
-		else
-			echo "---Download of ZFS v${ZFS_V} failed, putting container into sleep mode!---"
-			sleep infinity
+		cd ${DATA_DIR}
+		if [ ! -d ${DATA_DIR}/zfs-v${ZFS_V} ]; then
+			mkdir ${DATA_DIR}/zfs-v${ZFS_V}
 		fi
-	else
-		echo "---ZFS v${ZFS_V} found locally---"
+		if [ ! -f ${DATA_DIR}/zfs-v${ZFS_V}.tar.gz ]; then
+			echo "---Downloading ZFS v${ZFS_V}, please wait!---"
+			if wget -q -nc --show-progress --progress=bar:force:noscroll -O ${DATA_DIR}/zfs-v${ZFS_V}.tar.gz https://github.com/openzfs/zfs/releases/download/zfs-${ZFS_V}/zfs-${ZFS_V}.tar.gz ; then
+				echo "---Successfully downloaded ZFS v${ZFS_V}---"
+			else
+				echo "---Download of ZFS v${ZFS_V} failed, putting container into sleep mode!---"
+				sleep infinity
+			fi
+		else
+			echo "---ZFS v${ZFS_V} found locally---"
+		fi
+		tar -C ${DATA_DIR}/zfs-v${ZFS_V} --strip-components=1 -xf ${DATA_DIR}/zfs-v${ZFS_V}.tar.gz
+		echo "---Compiling ZFS v$ZFS_V, this can take some time, please wait!---"
+		cd ${DATA_DIR}/zfs-v${ZFS_V}
+		${DATA_DIR}/zfs-v${ZFS_V}/configure --prefix=${DATA_DIR}/bzroot-extracted-$UNAME/usr
+		make -j${CPU_COUNT}
+		make install
+		## Load Kernel Module and patch 'go' file on startup to load all existing ZFS Pools
+		echo '/sbin/modprobe zfs' >> ${DATA_DIR}/bzroot-extracted-$UNAME/etc/rc.d/rc.modules.local
+		sed -i '/chmod +x \/var\/tmp\/go/a\ \ echo "# Import all existing ZFS Pools\nzpool import -a &" >> /var/tmp/go' ${DATA_DIR}/bzroot-extracted-$UNAME/etc/rc.d/rc.local
+	elif [ "${ZFS_V}" == "master" ]; then
+		echo "---ZFS will be builded from latest OpenZFS branch on Github---"
+		cd ${DATA_DIR}
+		git clone https://github.com/openzfs/zfs
+		cd ${DATA_DIR}/zfs
+		git checkout master
+		${DATA_DIR}/zfs/autogen.sh
+		${DATA_DIR}/zfs/configure --prefix=${DATA_DIR}/bzroot-extracted-$UNAME/usr
+		make -j${CPU_COUNT}
+		make install
 	fi
-	tar -C ${DATA_DIR}/zfs-v${ZFS_V} --strip-components=1 -xf ${DATA_DIR}/zfs-v${ZFS_V}.tar.gz
-	echo "---Compiling ZFS v$ZFS_V, this can take some time, please wait!---"
-	cd ${DATA_DIR}/zfs-v${ZFS_V}
-	${DATA_DIR}/zfs-v${ZFS_V}/configure --prefix=${DATA_DIR}/bzroot-extracted-$UNAME/usr
-	make -j${CPU_COUNT}
-	make install
-	## Load Kernel Module and patch 'go' file on startup to load all existing ZFS Pools
-	echo '/sbin/modprobe zfs' >> ${DATA_DIR}/bzroot-extracted-$UNAME/etc/rc.d/rc.modules.local
-	sed -i '/chmod +x \/var\/tmp\/go/a\ \ echo "# Import all existing ZFS Pools\nzpool import -a &" >> /var/tmp/go' ${DATA_DIR}/bzroot-extracted-$UNAME/etc/rc.d/rc.local
 fi
 
 if [ "${BUILD_NVIDIA}" == "true" ]; then
@@ -890,7 +904,12 @@ else
 		fi
 	fi
 	if [ "${BUILD_ZFS}" == "true" ]; then
-		echo "-------------ZFS version: $ZFS_V----------------"
+		if [ "${ZFS_V}" == "latest" ]; then
+			echo "-------------ZFS version: $ZFS_V----------------"
+		elif [ "${ZFS_V}" == "master" ]; then
+			echo "---ZFS builded from latest OpenZFS branch on---"
+			echo "--------Github. Build date: $(date +'%Y-%m-%d')---------"
+		fi
 	fi
 fi
 echo "-----------------------------------------------"
