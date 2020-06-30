@@ -619,8 +619,10 @@ if [ "${BUILD_ZFS}" == "true" ]; then
 		${DATA_DIR}/zfs/configure --prefix=${DATA_DIR}/bzroot-extracted-$UNAME/usr
 		make -j${CPU_COUNT}
 		make install
-		## Load Kernel Module and patch 'go' file on startup to load all existing ZFS Pools
-		echo '/sbin/modprobe zfs' >> ${DATA_DIR}/bzroot-extracted-$UNAME/etc/rc.d/rc.modules.local
+		## Load Kernel Module and patch files to load all existing ZFS Pools and Kernel Modules
+		echo '
+# Load ZFS Kernel Module
+/sbin/modprobe zfs' >> ${DATA_DIR}/bzroot-extracted-$UNAME/etc/rc.d/rc.modules.local
 		echo "
 # Import all existing ZFS Pools on Array start
 echo 'Importing all ZFS Pools in background'
@@ -630,6 +632,15 @@ zpool import -a &" >> ${DATA_DIR}/bzroot-extracted-$UNAME/usr/local/emhttp/plugi
 echo 'Exporting all ZFS Pools in background'
 zpool export -a &" >> ${DATA_DIR}/bzroot-extracted-$UNAME/usr/local/emhttp/plugins/dynamix/event/unmounting_disks/local_syslog_stop
 	fi
+fi
+
+if [ "${ENABLE_i915}" == "true" ]; then
+	echo "---Load Kernel Module i915 on Startup enabled---"
+	echo '
+# Load i915 Kernel Module
+/sbin/modprobe i915
+sleep 5
+chmod -R 777 /dev/dri' >> ${DATA_DIR}/bzroot-extracted-$UNAME/etc/rc.d/rc.modules.local
 fi
 
 if [ "${BUILD_NVIDIA}" == "true" ]; then
@@ -893,6 +904,9 @@ if [ "${CUSTOM_MODE}" == "true" ]; then
 else
 	echo "---The images were built with the following----"
 	echo "------build options and version numbers:-------"
+	if [ "${ENABLE_i915}" == "true" ]; then
+		echo "----Load Kernel Module i915 on boot enabled----"
+	fi
 	if [ "${BUILD_NVIDIA}" == "true" ]; then
 		echo "--------nVidia driver version: $NV_DRV_V----------"
 		echo "------lib-nvidia-container version: $LIBNVIDIA_CONTAINER_V------"
