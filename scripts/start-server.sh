@@ -621,7 +621,14 @@ if [ "${BUILD_ZFS}" == "true" ]; then
 		make install
 		## Load Kernel Module and patch 'go' file on startup to load all existing ZFS Pools
 		echo '/sbin/modprobe zfs' >> ${DATA_DIR}/bzroot-extracted-$UNAME/etc/rc.d/rc.modules.local
-		sed -i '/chmod +x \/var\/tmp\/go/a\ \ echo "# Import all existing ZFS Pools\nzpool import -a &" >> /var/tmp/go' ${DATA_DIR}/bzroot-extracted-$UNAME/etc/rc.d/rc.local
+		echo "
+# Import all existing ZFS Pools on Array start
+echo 'Importing all ZFS Pools in background'
+zpool import -a &" >> ${DATA_DIR}/bzroot-extracted-$UNAME/usr/local/emhttp/plugins/dynamix/event/disks_mounted/local_syslog_start
+		echo "
+# Export all existing ZFS Pools on Array stop
+echo 'Exporting all ZFS Pools in background'
+zpool export -a &" >> ${DATA_DIR}/bzroot-extracted-$UNAME/usr/local/emhttp/plugins/dynamix/event/unmounting_disks/local_syslog_stop
 	fi
 fi
 
