@@ -235,7 +235,7 @@ if [ "${BUILD_NVIDIA}" == "true" ]; then
 	## Get latest version from 'nvidia-toolkit'
 	if [ "${CONTAINER_TOOLKIT_V}" == "latest" ]; then
 		echo "---Trying to get latest version for 'nvidia-toolkit' driver---"
-		CONTAINER_TOOLKIT_V="$(curl -s https://api.github.com/repos/NVIDIA/nvidia-container-toolkit/releases/latest | grep tag_name | cut -d '"' -f4 | cut -d 'v' -f2)"
+		CONTAINER_TOOLKIT_V="$(curl -s https://api.github.com/repos/NVIDIA/container-toolkit/releases/latest | grep tag_name | cut -d '"' -f4 | cut -d 'v' -f2)"
 		if [ -z $CONTAINER_TOOLKIT_V ]; then
 			echo "---Can't get latest version for 'nvidia-toolkit', putting container into sleep mode!---"
 			sleep infinity
@@ -770,17 +770,17 @@ EOF
 		cp ${DATA_DIR}/go/src/github.com/NVIDIA/nvidia-container-runtime/src/nvidia-container-runtime ${DATA_DIR}/bzroot-extracted-$UNAME/usr/bin
 
 		### Compile 'nvidia-container-toolkit' v3.2.0 and up
-		echo "---Compiling 'nvidia-container-toolkit', this can take some time, please wait!---"
+		echo "---Compiling 'container-toolkit', this can take some time, please wait!---"
 		cd ${DATA_DIR}/go/src/github.com/NVIDIA
-		git clone https://github.com/NVIDIA/nvidia-container-toolkit
-		cd ${DATA_DIR}/go/src/github.com/NVIDIA/nvidia-container-toolkit
+		git clone https://github.com/NVIDIA/container-toolkit
+		cd ${DATA_DIR}/go/src/github.com/NVIDIA/container-toolkit
 		git checkout v$CONTAINER_TOOLKIT_V
 		make binary
-		cp ${DATA_DIR}/go/src/github.com/NVIDIA/nvidia-container-toolkit/nvidia-container-toolkit ${DATA_DIR}/bzroot-extracted-$UNAME/usr/bin
+		cp ${DATA_DIR}/go/src/github.com/NVIDIA/container-toolkit/nvidia-container-toolkit ${DATA_DIR}/bzroot-extracted-$UNAME/usr/bin
 		cd ${DATA_DIR}/bzroot-extracted-$UNAME/usr/bin
 		ln -s /usr/bin/nvidia-container-toolkit nvidia-container-runtime-hook
 		mkdir -p ${DATA_DIR}/bzroot-extracted-$UNAME/etc/nvidia-container-runtime
-		cp ${DATA_DIR}/go/src/github.com/NVIDIA/nvidia-container-toolkit/config/config.toml.debian ${DATA_DIR}/bzroot-extracted-$UNAME/etc/nvidia-container-runtime/config.toml
+		cp ${DATA_DIR}/go/src/github.com/NVIDIA/container-toolkit/config/config.toml.debian ${DATA_DIR}/bzroot-extracted-$UNAME/etc/nvidia-container-runtime/config.toml
 		sed -i '/#path/c\path = "/usr/bin/nvidia-container-cli"' ${DATA_DIR}/bzroot-extracted-$UNAME/etc/nvidia-container-runtime/config.toml
 		sed -i '/#ldcache/c\ldcache = "/etc/ld.so.cache"' ${DATA_DIR}/bzroot-extracted-$UNAME/etc/nvidia-container-runtime/config.toml
 	fi
@@ -912,7 +912,7 @@ else
 		echo "------lib-nvidia-container version: $LIBNVIDIA_CONTAINER_V------"
 		echo "----nvidia-container-runtime version: $NVIDIA_CONTAINER_RUNTIME_V----"
 		if [ "${NVIDIA_CONTAINER_RUNTIME_V//./}" -ge "320" ]; then
-			echo "--------nvidia-container-toolkit version: $CONTAINER_TOOLKIT_V-------"
+			echo "--------container-toolkit version: $CONTAINER_TOOLKIT_V-------"
 		fi
 		echo "------------Seccomp version: $SECCOMP_V-------------"
 	fi
