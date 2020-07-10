@@ -286,6 +286,23 @@ if [ "${BUILD_ZFS}" == "true" ]; then
 	fi
 fi
 
+if [ "${BUILD_MLX_MFT}" == "true" ]; then
+	## Get latest version from Mellanox Firmware Tools
+	if [ "${MLX_MFT_V}" == "latest" ]; then
+		echo "---Trying to get latest version for Mellanox Firmware Tools---"
+		MLX_MFT_V="$(curl -s https://api.github.com/repos/Mellanox/mstflint/releases/latest | grep tag_name | cut -d '"' -f4 | cut -d 'v' -f2)"
+		if [ -z $MLX_MFT_V ]; then
+			echo "---Can't get latest version for Mellanox Firmware Tools, putting container into sleep mode!---"
+			sleep infinity
+		fi
+		echo "---Latest version for Mellanox Firmware Tools: v$MLX_MFT_V---"
+	else
+		echo "---Mellanox Firmware Tools version manually set to: v$MLX_MFT_V---"
+	fi
+else
+	echo "---Build of Mellanox Firmware Tools skipped!---"
+fi
+
 ## Check if Beta build mode is enabled and throw error if no images are found
 if [ "${BETA_BUILD}" == "true" ]; then
 	if [ ! -f ${DATA_DIR}/stock/beta/bzroot ] || [ ! -f ${DATA_DIR}/stock/beta/bzimage ] || [ ! -f ${DATA_DIR}/stock/beta/bzmodules ] || [ ! -f ${DATA_DIR}/stock/beta/bzfirmware ]; then
@@ -642,6 +659,47 @@ zpool export -a &" >> ${DATA_DIR}/bzroot-extracted-$UNAME/usr/local/emhttp/plugi
 	fi
 fi
 
+if [ "${BUILD_MLX_MFT}" == "true" ]; then
+	echo "---Downloading Mellanox Firmware Tools v${MLX_MFT_V}, please wait!---"
+	cd ${DATA_DIR}
+	if [ ! -d ${DATA_DIR}/mlx-v${MLX_MFT_V} ]; then
+		mkdir ${DATA_DIR}/mlx-v${MLX_MFT_V}
+	fi
+	if [ ! -f ${DATA_DIR}/mlx-v${MLX_MFT_V}.tar.gz ]; then
+		echo "---Downloading Mellanox Firmware Tools v${MLX_MFT_V}, please wait!---"
+		if wget -q -nc --show-progress --progress=bar:force:noscroll -O ${DATA_DIR}/mlx-v${MLX_MFT_V}.tar.gz https://github.com/Mellanox/mstflint/releases/download/v${MLX_MFT_V}/mstflint-${MLX_MFT_V}.tar.gz ; then
+			echo "---Successfully downloaded Mellanox Firmware Tools v${MLX_MFT_V}---"
+		else
+			echo "---Download of Mellanox Firmware Tools v${MLX_MFT_V} failed, putting container into sleep mode!---"
+			sleep infinity
+		fi
+	else
+		echo "---Mellanox Firmware Tools v${MLX_MFT_V} found locally---"
+	fi
+	tar -C ${DATA_DIR}/mlx-v${MLX_MFT_V} --strip-components=1 -xf ${DATA_DIR}/mlx-v${MLX_MFT_V}.tar.gz
+	echo "---Compiling Mellanox Firmware Tools v${MLX_MFT_V}, this can take some time, please wait!---"
+	cd ${DATA_DIR}/mlx-v${MLX_MFT_V}
+	${DATA_DIR}/mlx-v${MLX_MFT_V}/configure --enable-openssl
+	make -j${CPU_COUNT}
+	make install
+
+	# Download 'mget_temp' and copy all files to destination directory
+	echo "---Downloading 'mget_temp'---"
+	cd ${DATA_DIR}
+	if wget -q -nc --show-progress --progress=bar:force:noscroll https://github.com/ich777/docker-unraid-kernel-helper/raw/6.9.0/mlx_temp.zip ; then
+		echo "---Successfully downloaded 'mget_temp'---"
+		unzip ${DATA_DIR}/mlx_temp.zip -d ${DATA_DIR}/bzroot-extracted-$UNAME/usr/local/bin
+	else
+		echo "---Download of 'mget_temp' failed, if you are using the Unraid-Kernel-Helper Plugin the temperature reading will not work!---"
+		sleep 10
+	fi
+	cp -R /usr/local/bin/ ${DATA_DIR}/bzroot-extracted-$UNAME/usr/local/
+	cp -R /usr/local/include/ ${DATA_DIR}/bzroot-extracted-$UNAME/usr/local/
+	cp -R /usr/local/man/ ${DATA_DIR}/bzroot-extracted-$UNAME/usr/local/
+	cd /usr/local/lib/
+	find . -maxdepth 1 -not -name 'python*' -print0 | sed 's/^..//' | xargs -0 -I {} cp -R {} ${DATA_DIR}/bzroot-extracted-$UNAME/usr/local/lib/
+fi
+
 if [ "${ENABLE_i915}" == "true" ]; then
 	echo "---Load Kernel Module i915 on Startup enabled---"
 	echo '
@@ -942,6 +1000,10 @@ else
 			echo "---ZFS builded from latest OpenZFS branch on---"
 			echo "--------Github. Build date: $(date +'%Y-%m-%d')---------"
 		fi
+	fi
+	if [ "${BUILD_MLX_MFT}" == "true" ]; then
+		echo "-------Mellanox Firmware Tools version:--------"
+		echo "-------------------$MLX_MFT_V--------------------"
 	fi
 fi
 echo "-----------------------------------------------"
