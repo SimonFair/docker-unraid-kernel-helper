@@ -102,7 +102,7 @@ if [ "${BUILD_NVIDIA}" == "true" ]; then
 	echo "---WARNING WARNING WARNING WARNING WARNING WARNING----"
 	echo "------------------------------------------------------"
 fi
-if [ "$USER_PATCHES" == "true" ]; then
+if [ "${USER_PATCHES}" == "true" ]; then
 	if [ ! -d ${DATA_DIR}/user_patches ]; then
 		mkdir ${DATA_DIR}/user_patches
 		chmod -R ${DATA_PERM} ${DATA_DIR}/user_patches
@@ -124,7 +124,6 @@ if [ "$USER_PATCHES" == "true" ]; then
 	echo "------------------------------------------------------"
 	echo "----USER PATCHES --- USER PATCHES --- USER PATCHES----"
 	echo "------------------------------------------------------"
-	sleep 60
 fi
 if [ "${BETA_BUILD}" == "true" ]; then
 	if [ ! -d ${DATA_DIR}/stock/beta ]; then
@@ -143,7 +142,6 @@ if [ "${BETA_BUILD}" == "true" ]; then
 		echo "-----------------------------------------------------"
 		echo "-----BETA BUILD ----- BETA BUILD ----- BETA BUILD----"
 		echo "-----------------------------------------------------"
-		sleep 60
 	else
 		echo
 		echo "-----------------------------------------------------"
@@ -157,8 +155,13 @@ if [ "${BETA_BUILD}" == "true" ]; then
 		echo "-----------------------------------------------------"
 		echo "-----BETA BUILD ----- BETA BUILD ----- BETA BUILD----"
 		echo "-----------------------------------------------------"
-        sleep 60
 	fi
+fi
+if [ "${USER_PATCHES}" == "true" ]; then
+	sleep 60
+fi
+if [ "${BETA_BUILD}" == "true" ]; then
+	sleep 60
 fi
 sleep 60
 
@@ -312,6 +315,11 @@ else
 					echo "---Successfully downloaded Stock Unraid v${UNRAID_V}---"
 				else
 					echo "---Download of Stock Unraid v${UNRAID_V} failed, putting container into sleep mode!---"
+					echo
+					echo "--------------------------------------------------------------------------------------"
+					echo "----If you want to build the Kernel/Images for a Beta version of Unraid please make---"
+					echo "-------------sure to set the BETA_BUILD variable in the template to 'true'------------"
+					echo "--------------------------------------------------------------------------------------"
 					sleep infinity
 				fi
 			elif [ ${DATA_DIR}/unRAIDServer-${UNRAID_V}-x86_64.zip ]; then
