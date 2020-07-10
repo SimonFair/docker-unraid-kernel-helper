@@ -660,7 +660,6 @@ zpool export -a &" >> ${DATA_DIR}/bzroot-extracted-$UNAME/usr/local/emhttp/plugi
 fi
 
 if [ "${BUILD_MLX_MFT}" == "true" ]; then
-	echo "---Downloading Mellanox Firmware Tools v${MLX_MFT_V}, please wait!---"
 	cd ${DATA_DIR}
 	if [ ! -d ${DATA_DIR}/mlx-v${MLX_MFT_V} ]; then
 		mkdir ${DATA_DIR}/mlx-v${MLX_MFT_V}
