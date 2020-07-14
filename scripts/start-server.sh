@@ -142,7 +142,7 @@ if [ "${BETA_BUILD}" == "true" ]; then
 		echo "------------------------------------------------------"
 		echo "-----Now you could also put in the beta version------"
 		echo "----number that you want to build in the variable----"
-		echo "----BETA_BUILD in this format: '6.9.0-beta25' and----"
+		echo "-------BETA_BUILD in this format: 'beta25' and-------"
 		echo "-----it will download the version and build your-----"
 		echo "--------------------Kernel/Images--------------------"
 		echo "-----------------------------------------------------"
@@ -161,7 +161,7 @@ if [ "${BETA_BUILD}" == "true" ]; then
 		echo "------------------------------------------------------"
 		echo "-----Now you could also put in the beta version------"
 		echo "----number that you want to build in the variable----"
-		echo "----BETA_BUILD in this format: '6.9.0-beta25' and----"
+		echo "-------BETA_BUILD in this format: 'beta25' and-------"
 		echo "-----it will download the version and build your-----"
 		echo "--------------------Kernel/Images--------------------"
 		echo "-----------------------------------------------------"
@@ -329,7 +329,7 @@ if [ "${BETA_BUILD}" == "true" ]; then
 		echo "----------------------------------------------------------"
 		echo "----Now you could also put in the beta version number-----"
 		echo "----that you want to build in the variable BETA_BUILD-----"
-		echo "---in this format: '6.9.0-beta25' and it will download----"
+		echo "------in this format: 'beta25' and it will download-------"
 		echo "---------the version and build your Kernel/Images---------"
 		echo "----------------------------------------------------------"
 		sleep infinity
@@ -377,22 +377,22 @@ else
 	fi
 	if [ ! -f IMAGES_FILE_PATH=${DATA_DIR}/stock/beta/bzroot ] || [ ! -f IMAGES_FILE_PATH=${DATA_DIR}/stock/beta/bzimage ] || [ ! -f IMAGES_FILE_PATH=${DATA_DIR}/stock/beta/bzmodules ] || [ ! -f IMAGES_FILE_PATH=${DATA_DIR}/stock/beta/bzfirmware ]; then
 		cd ${DATA_DIR}/stock/beta
-		echo "---One or more Stock Unraid v${BETA_BUILD} files not found, downloading...---"
-		if [ ! -f ${DATA_DIR}/unRAIDServer-${BETA_BUILD}-x86_64.zip ]; then
-			if wget -q -nc --show-progress --progress=bar:force:noscroll -O ${DATA_DIR}/stock/beta/unRAIDServer-${BETA_BUILD}-x86_64.zip "https://s3.amazonaws.com/dnld.lime-technology.com/next/unRAIDServer-${BETA_BUILD}-x86_64.zip" ; then
-				echo "---Successfully downloaded Stock Unraid v${BETA_BUILD}---"
+		echo "---One or more Stock Unraid v${UNRAID_V}-${BETA_BUILD} files not found, downloading...---"
+		if [ ! -f ${DATA_DIR}/unRAIDServer-${UNRAID_V}-${BETA_BUILD}-x86_64.zip ]; then
+			if wget -q -nc --show-progress --progress=bar:force:noscroll -O ${DATA_DIR}/stock/beta/unRAIDServer-${UNRAID_V}-${BETA_BUILD}-x86_64.zip "https://s3.amazonaws.com/dnld.lime-technology.com/next/unRAIDServer-${UNRAID_V}-${BETA_BUILD}-x86_64.zip" ; then
+				echo "---Successfully downloaded Stock Unraid v${UNRAID_V}-${BETA_BUILD}---"
 			else
-				echo "---Download of Stock Unraid v${BETA_BUILD} failed, putting container into sleep mode!---"
+				echo "---Download of Stock Unraid v${UNRAID_V}-${BETA_BUILD} failed, putting container into sleep mode!---"
 				sleep infinity
 			fi
-		elif [ ${DATA_DIR}/unRAIDServer-${BETA_BUILD}-x86_64.zip ]; then
-			echo "---unRAIDServer-${BETA_BUILD}-x86_64.zip found locally---"
-			cp ${DATA_DIR}/unRAIDServer-${BETA_BUILD}-x86_64.zip ${DATA_DIR}/stock/beta/unRAIDServer-${BETA_BUILD}-x86_64.zip
+		elif [ ${DATA_DIR}/unRAIDServer-${UNRAID_V}-${BETA_BUILD}-x86_64.zip ]; then
+			echo "---unRAIDServer-${UNRAID_V}-${BETA_BUILD}-x86_64.zip found locally---"
+			cp ${DATA_DIR}/unRAIDServer-${UNRAID_V}-${BETA_BUILD}-x86_64.zip ${DATA_DIR}/stock/beta/unRAIDServer-${UNRAID_V}-${BETA_BUILD}-x86_64.zip
 		fi
 		echo "---Extracting files---"
-		unzip -o ${DATA_DIR}/stock/beta/unRAIDServer-${BETA_BUILD}-x86_64.zip
-		if [ ! -f ${DATA_DIR}/unRAIDServer-${BETA_BUILD}-x86_64.zip ]; then
-			mv ${DATA_DIR}/stock/beta/unRAIDServer-${BETA_BUILD}-x86_64.zip ${DATA_DIR}
+		unzip -o ${DATA_DIR}/stock/beta/unRAIDServer-${UNRAID_V}-${BETA_BUILD}-x86_64.zip
+		if [ ! -f ${DATA_DIR}/unRAIDServer-${UNRAID_V}-${BETA_BUILD}-x86_64.zip ]; then
+			mv ${DATA_DIR}/stock/beta/unRAIDServer-${UNRAID_V}-${BETA_BUILD}-x86_64.zip ${DATA_DIR}
 		fi
 		find . -maxdepth 1 -not -name 'bz*' -print0 | xargs -0 -I {} rm -R {} 2&>/dev/null
 		rm ${DATA_DIR}/stock/beta/*.sha256
