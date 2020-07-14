@@ -14,6 +14,10 @@ fi
 echo "---Starting...---"
 if [ ! -d ${DATA_DIR}/deps ]; then
 	cp -R /tmp/deps ${DATA_DIR}/
+else
+	rm ${DATA_DIR}/deps/dvb.list
+	rm ${DATA_DIR}/deps/joydev.list
+	cp -R /tmp/deps/* ${DATA_DIR}/deps/
 fi
 chown -R ${UID}:${GID} /opt/scripts
 
