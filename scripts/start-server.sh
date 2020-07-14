@@ -298,6 +298,8 @@ if [ "${BUILD_ZFS}" == "true" ]; then
 		echo "------------------------------------------"
 		sleep 10
 	fi
+else
+	echo "---Build of ZFS skipped!---"
 fi
 
 if [ "${BUILD_MLX_MFT}" == "true" ]; then
