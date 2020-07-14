@@ -139,6 +139,12 @@ if [ "${BETA_BUILD}" == "true" ]; then
 		echo "---bzroot, bzmodules, bzfirmware) of the preferred---"
 		echo "---Unraid Beta version into your 'stock/beta' folder---"
 		echo "------------Waiting additional 60 seconds------------"
+		echo "------------------------------------------------------"
+		echo "-----Now you could also put in the beta version------"
+		echo "----number that you want to build in the variable----"
+		echo "----BETA_BUILD in this format: '6.9.0-beta25' and----"
+		echo "-----it will download the version and build your-----"
+		echo "--------------------Kernel/Images--------------------"
 		echo "-----------------------------------------------------"
 		echo "-----BETA BUILD ----- BETA BUILD ----- BETA BUILD----"
 		echo "-----------------------------------------------------"
@@ -152,18 +158,26 @@ if [ "${BETA_BUILD}" == "true" ]; then
 		echo "---the preferred Unraid Beta version that you want---"
 		echo "---to build, otherwise it builds the wrong version---"
 		echo "------------Waiting additional 60 seconds------------"
+		echo "------------------------------------------------------"
+		echo "-----Now you could also put in the beta version------"
+		echo "----number that you want to build in the variable----"
+		echo "----BETA_BUILD in this format: '6.9.0-beta25' and----"
+		echo "-----it will download the version and build your-----"
+		echo "--------------------Kernel/Images--------------------"
 		echo "-----------------------------------------------------"
 		echo "-----BETA BUILD ----- BETA BUILD ----- BETA BUILD----"
 		echo "-----------------------------------------------------"
 	fi
 fi
-if [ "${USER_PATCHES}" == "true" ]; then
+if [ "${DONTWAIT}" != "true" ]; then
+	if [ "${USER_PATCHES}" == "true" ]; then
+		sleep 60
+	fi
+	if [ "${BETA_BUILD}" == "true" ]; then
+		sleep 60
+	fi
 	sleep 60
 fi
-if [ "${BETA_BUILD}" == "true" ]; then
-	sleep 60
-fi
-sleep 60
 
 if [ "${BUILD_DVB}" == "true" ]; then
 	## Get latest version from DigitalDevices drivers
@@ -310,15 +324,19 @@ if [ "${BETA_BUILD}" == "true" ]; then
 		echo "-----No stock images found, please extract the stock------"
 		echo "---Beta images (bzimage, bzroot, bzmodules, bzfirmware)---"
 		echo "---from the preferred Unraid Beta version in the folder---"
-		echo "-----'/stock/beta/' and restart the Container------"
-		echo "--------otherwise a build of the new images isn't---------"
-		echo "------possible, putting Container into sleep mode!--------"
+		echo "----'/stock/beta/' and restart the Container, putting-----"
+		echo "----------------Container into sleep mode!----------------"
+		echo "----------------------------------------------------------"
+		echo "----Now you could also put in the beta version number-----"
+		echo "----that you want to build in the variable BETA_BUILD-----"
+		echo "---in this format: '6.9.0-beta25' and it will download----"
+		echo "---------the version and build your Kernel/Images---------"
 		echo "----------------------------------------------------------"
 		sleep infinity
 	else
 		IMAGES_FILE_PATH=${DATA_DIR}/stock/beta
 	fi
-else
+elif [ -z "${BETA_BUILD}" ]; then
 	## Check if images of Stock Unraid version are present or download them if default path is /usr/src/stock
 	if [ "$IMAGES_FILE_PATH" == "/usr/src/stock" ]; then
 		if [ ! -d ${DATA_DIR}/stock/${UNRAID_V} ]; then
@@ -353,6 +371,33 @@ else
 		fi
 		IMAGES_FILE_PATH=${DATA_DIR}/stock/${UNRAID_V}
 	fi
+else
+	if [ ! -d ${DATA_DIR}/stock/beta ]; then
+		mkdir -p ${DATA_DIR}/stock/beta
+	fi
+	if [ ! -f IMAGES_FILE_PATH=${DATA_DIR}/stock/beta/bzroot ] || [ ! -f IMAGES_FILE_PATH=${DATA_DIR}/stock/beta/bzimage ] || [ ! -f IMAGES_FILE_PATH=${DATA_DIR}/stock/beta/bzmodules ] || [ ! -f IMAGES_FILE_PATH=${DATA_DIR}/stock/beta/bzfirmware ]; then
+		cd ${DATA_DIR}/stock/beta
+		echo "---One or more Stock Unraid v${BETA_BUILD} files not found, downloading...---"
+		if [ ! -f ${DATA_DIR}/unRAIDServer-${BETA_BUILD}-x86_64.zip ]; then
+			if wget -q -nc --show-progress --progress=bar:force:noscroll -O ${DATA_DIR}/stock/beta/unRAIDServer-${BETA_BUILD}-x86_64.zip "https://s3.amazonaws.com/dnld.lime-technology.com/next/unRAIDServer-${BETA_BUILD}-x86_64.zip" ; then
+				echo "---Successfully downloaded Stock Unraid v${BETA_BUILD}---"
+			else
+				echo "---Download of Stock Unraid v${BETA_BUILD} failed, putting container into sleep mode!---"
+				sleep infinity
+			fi
+		elif [ ${DATA_DIR}/unRAIDServer-${BETA_BUILD}-x86_64.zip ]; then
+			echo "---unRAIDServer-${BETA_BUILD}-x86_64.zip found locally---"
+			cp ${DATA_DIR}/unRAIDServer-${BETA_BUILD}-x86_64.zip ${DATA_DIR}/stock/beta/unRAIDServer-${BETA_BUILD}-x86_64.zip
+		fi
+		echo "---Extracting files---"
+		unzip -o ${DATA_DIR}/stock/beta/unRAIDServer-${BETA_BUILD}-x86_64.zip
+		if [ ! -f ${DATA_DIR}/unRAIDServer-${BETA_BUILD}-x86_64.zip ]; then
+			mv ${DATA_DIR}/stock/beta/unRAIDServer-${BETA_BUILD}-x86_64.zip ${DATA_DIR}
+		fi
+		find . -maxdepth 1 -not -name 'bz*' -print0 | xargs -0 -I {} rm -R {} 2&>/dev/null
+		rm ${DATA_DIR}/stock/beta/*.sha256
+	fi
+	IMAGES_FILE_PATH=${DATA_DIR}/stock/beta
 fi
 
 ## Create output folder
@@ -509,13 +554,19 @@ find ${DATA_DIR}/linux-$UNAME -type f -iname '*.patch' -print0|xargs -n1 -0 patc
 cd ${DATA_DIR}/linux-$UNAME
 make oldconfig
 
-echo "---Starting to build Kernel v${UNAME%-*} in 10 seconds, this can take some time, please wait!---"
-sleep 10
+echo "---Starting to build Kernel v${UNAME%-*}, this can take some time, please wait!---"
+if [ "${DONTWAIT}" != "true" ]; then
+	echo "---Starting to build Kernel v${UNAME%-*} in 10 seconds, this can take some time, please wait!---"
+	sleep 10
+fi
 cd ${DATA_DIR}/linux-$UNAME
 make -j${CPU_COUNT}
 
-echo "---Starting to install Kernel Modules in 10 seconds, please wait!---"
-sleep 10
+echo "---Starting to install Kernel Modules, please wait!---"
+if [ "${DONTWAIT}" != "true" ]; then
+	echo "---Starting to install Kernel Modules in 10 seconds, please wait!---"
+	sleep 10
+fi
 cd ${DATA_DIR}/linux-$UNAME
 make modules_install
 
