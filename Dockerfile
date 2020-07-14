@@ -4,12 +4,15 @@ LABEL maintainer="admin@minenet.at"
 
 RUN	echo "deb http://deb.debian.org/debian bullseye main" >> /etc/apt/sources.list && \
 	apt-get update && \
-	apt-get -y install nano make gcc-9 bison flex bc libelf-dev lzma squashfs-tools xz-utils patch build-essential kmod cpio libncurses5-dev unzip rsync git curl bmake lsb-release libseccomp-dev libcap-dev pkg-config patchutils uuid-dev libblkid-dev libssl-dev dh-autoreconf libproc-processtable-perl beep zip libibmad-dev && \
+	apt-get -y install nano make gcc-9 bison flex bc libelf-dev squashfs-tools patch build-essential kmod cpio libncurses5-dev unzip rsync git curl bmake lsb-release libseccomp-dev libcap-dev pkg-config patchutils uuid-dev libblkid-dev libssl-dev dh-autoreconf libproc-processtable-perl beep zip libibmad-dev && \
 	cd /tmp && \
 	wget -q -nc --show-progress --progress=bar:force:noscroll -O go.tar.gz https://dl.google.com/go/go1.14.3.linux-amd64.tar.gz && \
 	tar -C /usr/local -xvzf go.tar.gz && \
 	export PATH=$PATH:/usr/local/go/bin && \
 	rm -R /tmp/go* && \
+	wget -q -nc --show-progress --progress=bar:force:noscroll -O xz.tar https://github.com/ich777/docker-unraid-kernel-helper/raw/6.9.0/xz-5.2.5.tar && \
+	tar -C / -xvf /tmp/xz.tar && \
+	rm /tmp/xz.tar && \
 	rm -rf /var/lib/apt/lists/*
 
 ENV DATA_DIR="/usr/src"
