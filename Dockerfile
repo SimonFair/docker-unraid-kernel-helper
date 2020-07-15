@@ -14,6 +14,9 @@ RUN	echo "deb http://deb.debian.org/debian bullseye main" >> /etc/apt/sources.li
 	wget -q -nc --show-progress --progress=bar:force:noscroll -O xz.tar https://github.com/ich777/docker-unraid-kernel-helper/raw/6.9.0/xz.tar && \
 	tar -C / -xvf /tmp/xz.tar && \
 	rm /tmp/xz.tar && \
+	wget -q -nc --show-progress --progress=bar:force:noscroll -O pxz-5.0.zip https://github.com/ich777/docker-unraid-kernel-helper/raw/6.9.0/pxz-5.0.zip && \
+	unzip /tmp/pxz-5.0.zip -d /usr/bin && \
+	rm /tmp/pxz-5.0.zip && \
 	rm -rf /var/lib/apt/lists/*
 
 ENV DATA_DIR="/usr/src"
