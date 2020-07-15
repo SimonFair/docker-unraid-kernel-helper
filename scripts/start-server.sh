@@ -790,10 +790,11 @@ if [ "${BUILD_NVIDIA}" == "true" ]; then
 		${DATA_DIR}/NVIDIA_v440.82.run -x
 		cd ${DATA_DIR}/NVIDIA-Linux-x86_64-440.82
 		patch -p1 -i ../kernel-5.7.patch
-		${DATA_DIR}/NVIDIA-Linux-x86_64-440.82/nvidia-installer --kernel-name=$UNAME \
+		${DATA_DIR}/NVIDIA_v${NV_DRV_V}.run --kernel-name=$UNAME \
 		--no-precompiled-interface \
 		--disable-nouveau \
 		--x-library-path=${DATA_DIR}/bzroot-extracted-$UNAME/usr \
+		--x-module-path=${DATA_DIR}/bzroot-extracted-$UNAME/usr \
 		--opengl-prefix=${DATA_DIR}/bzroot-extracted-$UNAME/usr \
 		--installer-prefix=${DATA_DIR}/bzroot-extracted-$UNAME/usr \
 		--utility-prefix=${DATA_DIR}/bzroot-extracted-$UNAME/usr \
@@ -801,6 +802,7 @@ if [ "${BUILD_NVIDIA}" == "true" ]; then
 		--application-profile-path=${DATA_DIR}/bzroot-extracted-$UNAME/usr/share \
 		--proc-mount-point=${DATA_DIR}/bzroot-extracted-$UNAME/proc \
 		--compat32-libdir=${DATA_DIR}/bzroot-extracted-$UNAME/usr/lib \
+		--no-x-check \
 		--j${CPU_COUNT} \
 		--silent
 	else
@@ -820,20 +822,20 @@ if [ "${BUILD_NVIDIA}" == "true" ]; then
 		chmod +x ${DATA_DIR}/NVIDIA_v${NV_DRV_V}.run
 		echo "---Installing nVidia Driver and Kernel Module v${NV_DRV_V}, please wait!---"
 		${DATA_DIR}/NVIDIA_v${NV_DRV_V}.run --kernel-name=$UNAME \
-			--no-precompiled-interface \
-			--disable-nouveau \
-			--x-library-path=${DATA_DIR}/bzroot-extracted-$UNAME/usr \
-			--opengl-prefix=${DATA_DIR}/bzroot-extracted-$UNAME/usr \
-			--installer-prefix=${DATA_DIR}/bzroot-extracted-$UNAME/usr \
-			--utility-prefix=${DATA_DIR}/bzroot-extracted-$UNAME/usr \
-			--documentation-prefix=${DATA_DIR}/bzroot-extracted-$UNAME/usr \
-			--application-profile-path=${DATA_DIR}/bzroot-extracted-$UNAME/usr/share \
-			--proc-mount-point=${DATA_DIR}/bzroot-extracted-$UNAME/proc \
-			--compat32-libdir=${DATA_DIR}/bzroot-extracted-$UNAME/usr/lib \
-			--no-x-check \
-			--skip-depmod \
-			--j${CPU_COUNT} \
-			--silent
+		--no-precompiled-interface \
+		--disable-nouveau \
+		--x-library-path=${DATA_DIR}/bzroot-extracted-$UNAME/usr \
+		--x-module-path=${DATA_DIR}/bzroot-extracted-$UNAME/usr \
+		--opengl-prefix=${DATA_DIR}/bzroot-extracted-$UNAME/usr \
+		--installer-prefix=${DATA_DIR}/bzroot-extracted-$UNAME/usr \
+		--utility-prefix=${DATA_DIR}/bzroot-extracted-$UNAME/usr \
+		--documentation-prefix=${DATA_DIR}/bzroot-extracted-$UNAME/usr \
+		--application-profile-path=${DATA_DIR}/bzroot-extracted-$UNAME/usr/share \
+		--proc-mount-point=${DATA_DIR}/bzroot-extracted-$UNAME/proc \
+		--compat32-libdir=${DATA_DIR}/bzroot-extracted-$UNAME/usr/lib \
+		--no-x-check \
+		--j${CPU_COUNT} \
+		--silent
 	fi
 
 	## Copying 'nvidia-modprobe' and OpenCL icd
