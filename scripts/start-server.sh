@@ -547,7 +547,7 @@ if [ "${BUILD_JOYDEV}" == "true" ]; then
 	done < "${DATA_DIR}/deps/joydev.list"
 fi
 
-if [ "${CUSTOM_MODE}" == "stopbevorekernelbuild" ]; then
+if [ "${CUSTOM_MODE}" == "stopbevorkernelbuild" ]; then
 	echo "---Everything prepared, stopping---"
 	sleep infinity
 fi
