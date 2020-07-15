@@ -576,6 +576,11 @@ make modules_install
 echo "---Copying Kernel Image to output folder---"
 cp ${DATA_DIR}/linux-$UNAME/arch/x86_64/boot/bzImage ${DATA_DIR}/output-$UNAME/bzimage
 
+if [ "${STOPAFTERKERNEL}" == "true" ]; then
+	echo "---Kernel built, stopping---"
+	sleep infinity
+fi
+
 if [ "${BUILD_DVB}" == "true" ]; then
 	if [ "${DVB_TYPE}" == "digitaldevices" ]; then
 		## Download and install DigitalDevices drivers
@@ -683,7 +688,7 @@ if [ "${BUILD_ZFS}" == "true" ]; then
 		cd ${DATA_DIR}/zfs-v${ZFS_V}
 		${DATA_DIR}/zfs-v${ZFS_V}/configure --prefix=${DATA_DIR}/bzroot-extracted-$UNAME/usr
 		make -j${CPU_COUNT}
-		make install
+		DESTDIR=${DATA_DIR}/bzroot-extracted-$UNAME make install
 		## Load Kernel Module and patch 'go' file on startup to load all existing ZFS Pools
 		echo '/sbin/modprobe zfs' >> ${DATA_DIR}/bzroot-extracted-$UNAME/etc/rc.d/rc.modules.local
 		sed -i '/chmod +x \/var\/tmp\/go/a\ \ echo "# Import all existing ZFS Pools\nzpool import -a &" >> /var/tmp/go' ${DATA_DIR}/bzroot-extracted-$UNAME/etc/rc.d/rc.local
@@ -694,9 +699,9 @@ if [ "${BUILD_ZFS}" == "true" ]; then
 		cd ${DATA_DIR}/zfs
 		git checkout master
 		${DATA_DIR}/zfs/autogen.sh
-		${DATA_DIR}/zfs/configure --prefix=${DATA_DIR}/bzroot-extracted-$UNAME/usr
+		${DATA_DIR}/zfs/configure --prefix=/usr
 		make -j${CPU_COUNT}
-		make install
+		DESTDIR=${DATA_DIR}/bzroot-extracted-$UNAME make install
 		## Load Kernel Module and patch files to load all existing ZFS Pools and Kernel Modules
 		echo '
 # Load ZFS Kernel Module
@@ -731,25 +736,24 @@ if [ "${BUILD_MLX_MFT}" == "true" ]; then
 	tar -C ${DATA_DIR}/mlx-v${MLX_MFT_V} --strip-components=1 -xf ${DATA_DIR}/mlx-v${MLX_MFT_V}.tar.gz
 	echo "---Compiling Mellanox Firmware Tools v${MLX_MFT_V}, this can take some time, please wait!---"
 	cd ${DATA_DIR}/mlx-v${MLX_MFT_V}
-	${DATA_DIR}/mlx-v${MLX_MFT_V}/configure --enable-openssl
+	${DATA_DIR}/mlx-v${MLX_MFT_V}/configure --enable-openssl --prefix=/usr
 	make -j${CPU_COUNT}
-	make install
+	DESTDIR=${DATA_DIR}/bzroot-extracted-$UNAME make install
 
 	# Download 'mget_temp' and copy all files to destination directory
 	echo "---Downloading 'mget_temp'---"
 	cd ${DATA_DIR}
-	if wget -q -nc --show-progress --progress=bar:force:noscroll https://github.com/ich777/docker-unraid-kernel-helper/raw/6.9.0/mlx_temp.zip ; then
-		echo "---Successfully downloaded 'mget_temp'---"
-		unzip ${DATA_DIR}/mlx_temp.zip -d ${DATA_DIR}/bzroot-extracted-$UNAME/usr/local/bin
+	if [ ! -f ${DATA_DIR}/mlx_temp.zip ]; then
+		if wget -q -nc --show-progress --progress=bar:force:noscroll https://github.com/ich777/docker-unraid-kernel-helper/raw/6.9.0/mlx_temp.zip ; then
+			echo "---Successfully downloaded 'mget_temp'---"
+		else
+			echo "---Download of 'mget_temp' failed, if you are using the Unraid-Kernel-Helper Plugin the temperature reading will not work!---"
+			sleep 10
+		fi
 	else
-		echo "---Download of 'mget_temp' failed, if you are using the Unraid-Kernel-Helper Plugin the temperature reading will not work!---"
-		sleep 10
+		echo "---'mget_temp' found locally---"
 	fi
-	cp -R /usr/local/bin/ ${DATA_DIR}/bzroot-extracted-$UNAME/usr/local/
-	cp -R /usr/local/include/ ${DATA_DIR}/bzroot-extracted-$UNAME/usr/local/
-	cp -R /usr/local/man/ ${DATA_DIR}/bzroot-extracted-$UNAME/usr/local/
-	cd /usr/local/lib/
-	find . -maxdepth 1 -not -name 'python*' -print0 | sed 's/^..//' | xargs -0 -I {} cp -R {} ${DATA_DIR}/bzroot-extracted-$UNAME/usr/local/lib/
+	unzip ${DATA_DIR}/mlx_temp.zip -d ${DATA_DIR}/bzroot-extracted-$UNAME/usr/bin
 fi
 
 if [ "${ENABLE_i915}" == "true" ]; then
@@ -821,6 +825,8 @@ if [ "${BUILD_NVIDIA}" == "true" ]; then
 			--application-profile-path=${DATA_DIR}/bzroot-extracted-$UNAME/usr/share \
 			--proc-mount-point=${DATA_DIR}/bzroot-extracted-$UNAME/proc \
 			--compat32-libdir=${DATA_DIR}/bzroot-extracted-$UNAME/usr/lib \
+			--no-x-check \
+			--skip-depmod \
 			--j${CPU_COUNT} \
 			--silent
 	fi
@@ -921,9 +927,9 @@ EOF
 	fi
 	tar -C ${DATA_DIR}/seccomp-v${SECCOMP_V} --strip-components=1 -xf ${DATA_DIR}/seccomp-v${SECCOMP_V}.tar.gz
 	cd ${DATA_DIR}/seccomp-v${SECCOMP_V}
-	${DATA_DIR}/seccomp-v${SECCOMP_V}/configure --prefix=${DATA_DIR}/bzroot-extracted-$UNAME/usr --disable-static
-	make
-	make install
+	${DATA_DIR}/seccomp-v${SECCOMP_V}/configure --prefix=/usr --disable-static
+	make -j${CPU_COUNT}
+	DESTDIR=${DATA_DIR}/bzroot-extracted-$UNAME make install
 fi
 
 ## Create bzmodules
@@ -937,7 +943,7 @@ mksquashfs /lib/firmware ${DATA_DIR}/output-$UNAME/bzfirmware -noappend
 ## Compress bzroot image
 echo "---Creating 'bzroot', this can take some time, please wait!---"
 cd ${DATA_DIR}/bzroot-extracted-$UNAME
-find . | cpio -o -H newc | xz --format=lzma >> ${DATA_DIR}/output-$UNAME/bzroot
+find . | cpio -o -H newc | xz --format=lzma --threads=${CPU_COUNT} >> ${DATA_DIR}/output-$UNAME/bzroot
 
 ## Generate checksums
 echo "---Generationg checksums---"
