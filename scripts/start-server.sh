@@ -576,7 +576,7 @@ make modules_install
 echo "---Copying Kernel Image to output folder---"
 cp ${DATA_DIR}/linux-$UNAME/arch/x86_64/boot/bzImage ${DATA_DIR}/output-$UNAME/bzimage
 
-if [ "${STOPAFTERKERNEL}" == "true" ]; then
+if [ "${CUSTOM_MODE}" == "stopafterkernelbuild" ]; then
 	echo "---Kernel built, stopping---"
 	sleep infinity
 fi
