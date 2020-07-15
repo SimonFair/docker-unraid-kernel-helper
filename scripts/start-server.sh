@@ -547,6 +547,11 @@ if [ "${BUILD_JOYDEV}" == "true" ]; then
 	done < "${DATA_DIR}/deps/joydev.list"
 fi
 
+if [ "${CUSTOM_MODE}" == "stopbevorekernelbuild" ]; then
+	echo "---Everything prepared, stopping---"
+	sleep infinity
+fi
+
 ## Apply patches
 echo "---Applying patches to Kernel, please wait!---"
 cd ${DATA_DIR}/linux-$UNAME
