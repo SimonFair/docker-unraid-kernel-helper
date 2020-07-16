@@ -704,7 +704,7 @@ if [ "${BUILD_ZFS}" == "true" ]; then
 		cd ${DATA_DIR}/zfs
 		git checkout master
 		${DATA_DIR}/zfs/autogen.sh
-		${DATA_DIR}/zfs/configure --prefix=/usr
+		${DATA_DIR}/zfs/configure --prefix=${DATA_DIR}/bzroot-extracted-$UNAME/usr
 		make -j${CPU_COUNT}
 		make install
 		## Load Kernel Module and patch files to load all existing ZFS Pools and Kernel Modules
