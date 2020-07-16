@@ -693,7 +693,7 @@ if [ "${BUILD_ZFS}" == "true" ]; then
 		cd ${DATA_DIR}/zfs-v${ZFS_V}
 		${DATA_DIR}/zfs-v${ZFS_V}/configure --prefix=${DATA_DIR}/bzroot-extracted-$UNAME/usr
 		make -j${CPU_COUNT}
-		DESTDIR=${DATA_DIR}/bzroot-extracted-$UNAME make install
+		make install
 		## Load Kernel Module and patch 'go' file on startup to load all existing ZFS Pools
 		echo '/sbin/modprobe zfs' >> ${DATA_DIR}/bzroot-extracted-$UNAME/etc/rc.d/rc.modules.local
 		sed -i '/chmod +x \/var\/tmp\/go/a\ \ echo "# Import all existing ZFS Pools\nzpool import -a &" >> /var/tmp/go' ${DATA_DIR}/bzroot-extracted-$UNAME/etc/rc.d/rc.local
@@ -706,7 +706,7 @@ if [ "${BUILD_ZFS}" == "true" ]; then
 		${DATA_DIR}/zfs/autogen.sh
 		${DATA_DIR}/zfs/configure --prefix=/usr
 		make -j${CPU_COUNT}
-		DESTDIR=${DATA_DIR}/bzroot-extracted-$UNAME make install
+		make install
 		## Load Kernel Module and patch files to load all existing ZFS Pools and Kernel Modules
 		echo '
 # Load ZFS Kernel Module
