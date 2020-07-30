@@ -302,6 +302,45 @@ else
 	echo "---Build of ZFS skipped!---"
 fi
 
+if [ "${BUILD_ISCSI}" == "true" ]; then
+	## Get latest version from 'targetcli-fb', 'rtslib-fb' & 'configshell-fb'
+	if [ "${TARGETCLI_FB_V}" == "latest" ]; then
+		echo "---Trying to get latest version for 'targetcli-fb'---"
+		TARGETCLI_FB_V="$(curl -s https://api.github.com/repos/open-iscsi/targetcli-fb/releases/latest | grep tag_name | cut -d '"' -f4 | cut -d 'v' -f2)"
+		if [ -z $TARGETCLI_FB_V ]; then
+			echo "---Can't get latest version for 'targetcli-fb', putting container into sleep mode!---"
+			sleep infinity
+		fi
+		echo "---Latest version for 'targetcli-fb': v$TARGETCLI_FB_V---"
+	else
+		echo "---'targetcli-fb' version manually set to: v$TARGETCLI_FB_V---"
+	fi
+	if [ "${RTSLIB_FB_V}" == "latest" ]; then
+		echo "---Trying to get latest version for 'rtslib-fb'---"
+		RTSLIB_FB_V="$(curl -s https://api.github.com/repos/open-iscsi/rtslib-fb/releases/latest | grep tag_name | cut -d '"' -f4 | cut -d 'v' -f2)"
+		if [ -z $RTSLIB_FB_V ]; then
+			echo "---Can't get latest version for 'rtslib-fb', putting container into sleep mode!---"
+			sleep infinity
+		fi
+		echo "---Latest version for 'rtslib-fb': v$RTSLIB_FB_V---"
+	else
+		echo "---'rtslib-fb' version manually set to: v$RTSLIB_FB_V---"
+	fi
+	if [ "${CONFIGSHELL_FB_V}" == "latest" ]; then
+		echo "---Trying to get latest version for 'configshell-fb'---"
+		CONFIGSHELL_FB_V="$(curl -s https://api.github.com/repos/open-iscsi/configshell-fb/tags | grep name | cut -d '"' -f4 | cut -d 'v' -f2 | head -1)"
+		if [ -z $CONFIGSHELL_FB_V ]; then
+			echo "---Can't get latest version for 'configshell-fb', putting container into sleep mode!---"
+			sleep infinity
+		fi
+		echo "---Latest version for 'configshell-fb': v$CONFIGSHELL_FB_V---"
+	else
+		echo "---'configshell-fb' version manually set to: v$CONFIGSHELL_FB_V---"
+	fi
+else
+	echo "---Build of iSCSI skipped!---"
+fi
+
 if [ "${BUILD_MLX_MFT}" == "true" ]; then
 	## Get latest version from Mellanox Firmware Tools
 	if [ "${MLX_MFT_V}" == "latest" ]; then
@@ -361,10 +400,9 @@ elif [ -z "${BETA_BUILD}" ]; then
 				fi
 			elif [ ${DATA_DIR}/unRAIDServer-${UNRAID_V}-x86_64.zip ]; then
 				echo "---unRAIDServer-${UNRAID_V}-x86_64.zip found locally---"
-				cp ${DATA_DIR}/unRAIDServer-${UNRAID_V}-x86_64.zip ${DATA_DIR}/stock/${UNRAID_V}/unRAIDServer-${UNRAID_V}-x86_64.zip
 			fi
 			echo "---Extracting files---"
-			unzip -o ${DATA_DIR}/stock/${UNRAID_V}/unRAIDServer-${UNRAID_V}-x86_64.zip
+			unzip -o ${DATA_DIR}/unRAIDServer-${UNRAID_V}-x86_64.zip
 			if [ ! -f ${DATA_DIR}/unRAIDServer-${UNRAID_V}-x86_64.zip ]; then
 				mv ${DATA_DIR}/stock/${UNRAID_V}/unRAIDServer-${UNRAID_V}-x86_64.zip ${DATA_DIR}
 			fi
@@ -389,10 +427,9 @@ else
 			fi
 		elif [ ${DATA_DIR}/unRAIDServer-${UNRAID_V}-${BETA_BUILD}-x86_64.zip ]; then
 			echo "---unRAIDServer-${UNRAID_V}-${BETA_BUILD}-x86_64.zip found locally---"
-			cp ${DATA_DIR}/unRAIDServer-${UNRAID_V}-${BETA_BUILD}-x86_64.zip ${DATA_DIR}/stock/beta/unRAIDServer-${UNRAID_V}-${BETA_BUILD}-x86_64.zip
 		fi
 		echo "---Extracting files---"
-		unzip -o ${DATA_DIR}/stock/beta/unRAIDServer-${UNRAID_V}-${BETA_BUILD}-x86_64.zip
+		unzip -o ${DATA_DIR}/unRAIDServer-${UNRAID_V}-${BETA_BUILD}-x86_64.zip
 		if [ ! -f ${DATA_DIR}/unRAIDServer-${UNRAID_V}-${BETA_BUILD}-x86_64.zip ]; then
 			mv ${DATA_DIR}/stock/beta/unRAIDServer-${UNRAID_V}-${BETA_BUILD}-x86_64.zip ${DATA_DIR}
 		fi
@@ -722,6 +759,101 @@ zpool export -a &" >> ${DATA_DIR}/bzroot-extracted-$UNAME/usr/local/emhttp/plugi
 	fi
 fi
 
+if [ "${BUILD_ISCSI}" == "true" ]; then
+	## Install custom Python build v3.8.4rc1
+	if [ ! -f /bin/du ]; then
+		cp ${DATA_DIR}/bzroot-extracted-$UNAME/bin/du /bin/
+	fi
+	${DATA_DIR}/bzroot-extracted-$UNAME/sbin/installpkg --root ${DATA_DIR}/bzroot-extracted-$UNAME /tmp/python-3.8.4rc1-x86_64-1.tgz
+
+	## Install required libraries 'gobject-introspection'
+	if [ ! -f /bin/du ]; then
+		cp ${DATA_DIR}/bzroot-extracted-$UNAME/bin/du /bin/
+	fi
+	${DATA_DIR}/bzroot-extracted-$UNAME/sbin/installpkg --root ${DATA_DIR}/bzroot-extracted-$UNAME /tmp/gobject-introspection-1.46.0-x86_64-1.txz
+
+	## Download, compile and install 'targetcli-fb', 'trslib-fb' & 'configshell-fb'
+	export PYTHONUSERBASE=${DATA_DIR}/bzroot-extracted-$UNAME/usr
+
+	cd ${DATA_DIR}
+	if [ ! -d ${DATA_DIR}/targetcli-fb-v${TARGETCLI_FB_V} ]; then
+		mkdir ${DATA_DIR}/targetcli-fb-v${TARGETCLI_FB_V}
+	fi
+	if [ ! -f ${DATA_DIR}/targetcli-fb-v${TARGETCLI_FB_V}.tar.gz ]; then
+		echo "---Downloading 'targetcli-fb' v${TARGETCLI_FB_V}, please wait!---"
+		if wget -q -nc --show-progress --progress=bar:force:noscroll -O ${DATA_DIR}/targetcli-fb-v${TARGETCLI_FB_V}.tar.gz https://github.com/open-iscsi/targetcli-fb/archive/v${TARGETCLI_FB_V}.tar.gz ; then
+			echo "---Successfully downloaded 'targetcli-fb' v${TARGETCLI_FB_V}---"
+		else
+			echo "---Download of 'targetcli-fb' v${TARGETCLI_FB_V} failed, putting container into sleep mode!---"
+			sleep infinity
+		fi
+	else
+		echo "---'targetcli-fb' v${TARGETCLI_FB_V} found locally---"
+	fi
+	tar -C ${DATA_DIR}/targetcli-fb-v${TARGETCLI_FB_V} --strip-components=1 -xf ${DATA_DIR}/targetcli-fb-v${TARGETCLI_FB_V}.tar.gz
+	cd ${DATA_DIR}/targetcli-fb-v${TARGETCLI_FB_V}
+	python3 setup.py build
+	python3 setup.py install --user
+
+	cd ${DATA_DIR}
+	if [ ! -d ${DATA_DIR}/rtslib-fb-v${RTSLIB_FB_V} ]; then
+		mkdir ${DATA_DIR}/rtslib-fb-v${RTSLIB_FB_V}
+	fi
+	if [ ! -f ${DATA_DIR}/rtslib-fb-v${RTSLIB_FB_V}.tar.gz ]; then
+		echo "---Downloading 'rtslib-fb' v${RTSLIB_FB_V}, please wait!---"
+		if wget -q -nc --show-progress --progress=bar:force:noscroll -O ${DATA_DIR}/rtslib-fb-v${RTSLIB_FB_V}.tar.gz https://github.com/open-iscsi/rtslib-fb/archive/v${RTSLIB_FB_V}.tar.gz ; then
+			echo "---Successfully downloaded 'rtslib-fb' v${RTSLIB_FB_V}---"
+		else
+			echo "---Download of 'rtslib-fb' v${RTSLIB_FB_V} failed, putting container into sleep mode!---"
+			sleep infinity
+		fi
+	else
+		echo "---'rtslib-fb' v${RTSLIB_FB_V} found locally---"
+	fi
+	tar -C ${DATA_DIR}/rtslib-fb-v${RTSLIB_FB_V} --strip-components=1 -xf ${DATA_DIR}/rtslib-fb-v${RTSLIB_FB_V}.tar.gz
+	cd ${DATA_DIR}/rtslib-fb-v${RTSLIB_FB_V}
+	python3 setup.py build
+	python3 setup.py install --user
+
+	cd ${DATA_DIR}
+	if [ ! -d ${DATA_DIR}/configshell-fb-v${CONFIGSHELL_FB_V} ]; then
+		mkdir ${DATA_DIR}/configshell-fb-v${CONFIGSHELL_FB_V}
+	fi
+	if [ ! -f ${DATA_DIR}/configshell-fb-v${CONFIGSHELL_FB_V}.tar.gz ]; then
+		echo "---Downloading 'configshell-fb' v${CONFIGSHELL_FB_V}, please wait!---"
+		if wget -q -nc --show-progress --progress=bar:force:noscroll -O ${DATA_DIR}/configshell-fb-v${CONFIGSHELL_FB_V}.tar.gz https://github.com/open-iscsi/configshell-fb/archive/v${CONFIGSHELL_FB_V}.tar.gz ; then
+			echo "---Successfully downloaded 'configshell-fb' v${CONFIGSHELL_FB_V}---"
+		else
+			echo "---Download of 'configshell-fb' v${CONFIGSHELL_FB_V} failed, putting container into sleep mode!---"
+			sleep infinity
+		fi
+	else
+		echo "---'configshell-fb' v${CONFIGSHELL_FB_V} found locally---"
+	fi
+	tar -C ${DATA_DIR}/configshell-fb-v${CONFIGSHELL_FB_V} --strip-components=1 -xf ${DATA_DIR}/configshell-fb-v${CONFIGSHELL_FB_V}.tar.gz
+	cd ${DATA_DIR}/configshell-fb-v${CONFIGSHELL_FB_V}
+	python3 setup.py build
+	python3 setup.py install --user
+
+	## Create iSCSI directory at boot on Boot Device if does not exist and link it to /etc/target
+	echo '
+# Create iSCSI directory on boot device and link it to the config directory
+if [ ! -d /boot/config/iscsi ]; then
+  mkdir -p /boot/config/iscsi
+fi
+ln -s /boot/config/iscsi /etc/target' >> ${DATA_DIR}/bzroot-extracted-$UNAME/etc/rc.d/rc.S
+
+	## Load/unload iSCSI configuration on array start/stop
+	echo "
+# Load iSCSI configuration
+echo 'Loading iSCSI configuration'
+targetcli restoreconfig &" >> ${DATA_DIR}/bzroot-extracted-$UNAME/usr/local/emhttp/plugins/dynamix/event/disks_mounted/local_syslog_start
+	echo "
+# Unload iSCSI configuration
+echo 'Unloading iSCSI configuration'
+targetcli clearconfig confirm=True &" >> ${DATA_DIR}/bzroot-extracted-$UNAME/usr/local/emhttp/plugins/dynamix/event/unmounting_disks/local_syslog_stop
+fi
+
 if [ "${BUILD_MLX_MFT}" == "true" ]; then
 	cd ${DATA_DIR}
 	if [ ! -d ${DATA_DIR}/mlx-v${MLX_MFT_V} ]; then
@@ -984,6 +1116,7 @@ if [ "$CLEANUP" == "full" ]; then
 	cd ${DATA_DIR}
 	find . -maxdepth 1 -not -name 'output*' -print0 | xargs -0 -I {} rm -R {} 2&>/dev/null
 	rm /etc/modprobe.d/nvidia-installer-disable-nouveau.conf
+	rm /usr/du
 	rm -R /lib/modules
 	rm -R /lib/firmware
 elif [ "$CLEANUP" == "moderate" ]; then
@@ -991,11 +1124,13 @@ elif [ "$CLEANUP" == "moderate" ]; then
 	cd ${DATA_DIR}
 	find . -maxdepth 1 -type d -not -name 'output*' -print0 | xargs -0 -I {} rm -R {} 2&>/dev/null
 	rm /etc/modprobe.d/nvidia-installer-disable-nouveau.conf
+	rm /usr/du
 	rm -R /lib/modules
 	rm -R /lib/firmware
 else
 	echo "---Nothing to clean, no cleanup selected---"
 	rm /etc/modprobe.d/nvidia-installer-disable-nouveau.conf
+	rm /usr/du
 	rm -R /lib/modules
 	rm -R /lib/firmware
 fi
@@ -1065,6 +1200,15 @@ else
 			echo "---ZFS builded from latest OpenZFS branch on---"
 			echo "--------Github. Build date: $(date +'%Y-%m-%d')---------"
 		fi
+	fi
+
+	if [ "${BUILD_ISCSI}" == "true" ]; then
+		echo "----iSCSI is built with the follwing versions:----"
+		echo "-----------------Python v3.8.4rc1-----------------"
+		echo "-----------GObject-Introspection v1.46.0----------"
+		echo "-------------'targetcli-fb' v${TARGETCLI_FB_V}--------------"
+		echo "--------------'trslib-fb' v${RTSLIB_FB_V}----------------"
+		echo "------------'configshell-fb' v${CONFIGSHELL_FB_V}-------------"
 	fi
 	if [ "${BUILD_MLX_MFT}" == "true" ]; then
 		echo "-------Mellanox Firmware Tools version:--------"
