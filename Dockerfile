@@ -4,7 +4,7 @@ LABEL maintainer="admin@minenet.at"
 
 RUN	echo "deb http://deb.debian.org/debian bullseye main" >> /etc/apt/sources.list && \
 	apt-get update && \
-	apt-get -y install nano make gcc-9 bison flex bc libelf-dev squashfs-tools patch build-essential kmod cpio libncurses5-dev unzip rsync git curl bmake lsb-release libseccomp-dev libcap-dev pkg-config patchutils uuid-dev libblkid-dev libssl-dev dh-autoreconf libproc-processtable-perl beep zip libibmad-dev && \
+	apt-get -y install nano make gcc-9 bison flex bc libelf-dev squashfs-tools patch build-essential kmod cpio libncurses5-dev unzip rsync git curl bmake lsb-release libseccomp-dev libcap-dev pkg-config patchutils uuid-dev libblkid-dev libssl-dev dh-autoreconf libproc-processtable-perl beep zip libibmad-dev python3-setuptools && \
 	cd /tmp && \
 	wget -q -nc --show-progress --progress=bar:force:noscroll -O go.tar.gz https://dl.google.com/go/go1.14.3.linux-amd64.tar.gz && \
 	tar -C /usr/local -xvzf go.tar.gz && \
@@ -14,6 +14,8 @@ RUN	echo "deb http://deb.debian.org/debian bullseye main" >> /etc/apt/sources.li
 	wget -q -nc --show-progress --progress=bar:force:noscroll -O xz.tar https://github.com/ich777/docker-unraid-kernel-helper/raw/6.9.0/xz.tar && \
 	tar -C / -xvf /tmp/xz.tar && \
 	rm /tmp/xz.tar && \
+	wget -q -nc --show-progress --progress=bar:force:noscroll https://github.com/ich777/docker-unraid-kernel-helper/raw/6.9.0/python-3.8.4rc1-x86_64-1.tgz && \
+	wget -q -nc --show-progress --progress=bar:force:noscroll http://slackware.cs.utah.edu/pub/slackware/slackware64-14.2/slackware64/l/gobject-introspection-1.46.0-x86_64-1.txz && \
 	rm -rf /var/lib/apt/lists/*
 
 ENV DATA_DIR="/usr/src"
@@ -24,6 +26,7 @@ ENV IMAGES_FILE_PATH="/usr/src/stock"
 ENV BUILD_DVB="true"
 ENV BUILD_NVIDIA="true"
 ENV BUILD_ZFS="false"
+ENV BUILD_ISCSI="false"
 ENV BUILD_MLX_MFT="false"
 ENV ENABLE_i915="false"
 ENV BUILD_JOYDEV="false"
@@ -37,6 +40,9 @@ ENV LE_DRV_V="latest"
 ENV NV_DRV_V="latest"
 ENV SECCOMP_V="latest"
 ENV ZFS_V="master"
+ENV TARGETCLI_FB_V="latest"
+ENV RTSLIB_FB_V="latest"
+ENV CONFIGSHELL_FB_V="latest"
 ENV MLX_MFT_V="latest"
 ENV CLEANUP="full"
 ENV CREATE_BACKUP="true"
