@@ -571,6 +571,19 @@ if [ "${BUILD_DVB}" == "true" ]; then
 	done < "${DATA_DIR}/deps/dvb.list"
 fi
 
+if [ "${BUILD_ISCSI}" == "true" ]; then
+	cd ${DATA_DIR}/linux-$UNAME
+	echo "---Patching necessary files for 'joydev', this can take some time, please wait!---"
+	while read -r line
+	do
+		line_conf=${line//# /}
+		line_conf=${line_conf%%=*}
+		line_conf=${line_conf%% *}
+		sed -i "/$line_conf/d" "${DATA_DIR}/linux-$UNAME/.config"
+		echo "$line" >> "${DATA_DIR}/linux-$UNAME/.config"
+	done < "${DATA_DIR}/deps/iscsi.list"
+fi
+
 if [ "${BUILD_JOYDEV}" == "true" ]; then
 	cd ${DATA_DIR}/linux-$UNAME
 	echo "---Patching necessary files for 'joydev', this can take some time, please wait!---"
