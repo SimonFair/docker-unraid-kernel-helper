@@ -3,12 +3,18 @@ FROM ich777/debian-baseimage
 LABEL maintainer="admin@minenet.at"
 
 RUN	apt-get update && \
-	apt-get -y install nano make gcc bison flex bc libelf-dev lzma squashfs-tools xz-utils patch build-essential kmod cpio libncurses5-dev unzip rsync git curl bmake lsb-release libseccomp-dev libcap-dev pkg-config patchutils uuid-dev libblkid-dev libssl-dev dh-autoreconf libproc-processtable-perl && \
+	apt-get -y install nano make gcc bison flex bc libelf-dev lzma squashfs-tools xz-utils patch build-essential kmod cpio libncurses5-dev unzip rsync git curl bmake lsb-release libseccomp-dev libcap-dev pkg-config patchutils uuid-dev libblkid-dev libssl-dev dh-autoreconf libproc-processtable-perl beep zip python3-setuptools && \
 	cd /tmp && \
 	wget -q -nc --show-progress --progress=bar:force:noscroll -O go.tar.gz https://dl.google.com/go/go1.14.3.linux-amd64.tar.gz && \
 	tar -C /usr/local -xvzf go.tar.gz && \
 	export PATH=$PATH:/usr/local/go/bin && \
 	rm -R /tmp/go* && \
+	rm -R /lib/x86_64-linux-gnu/liblzma.* && \
+	wget -q -nc --show-progress --progress=bar:force:noscroll -O xz.tar https://github.com/ich777/docker-unraid-kernel-helper/raw/6.9.0/xz.tar && \
+	tar -C / -xvf /tmp/xz.tar && \
+	rm /tmp/xz.tar && \
+	wget -q -nc --show-progress --progress=bar:force:noscroll https://github.com/ich777/python-unraid/raw/3.8.4rc1/python-3.8.4rc1-x86_64-1.tgz && \
+	wget -q -nc --show-progress --progress=bar:force:noscroll https://github.com/ich777/python-unraid/raw/3.7.3/gobject-introspection-1.46.0-x86_64-1.txz && \
 	rm -rf /var/lib/apt/lists/*
 
 ENV DATA_DIR="/usr/src"
@@ -19,6 +25,7 @@ ENV BUILD_DVB="true"
 ENV DVB_TYPE="libreelec"
 ENV BUILD_NVIDIA="true"
 ENV BUILD_ZFS="false"
+ENV BUILD_ISCSI="false"
 ENV ENABLE_i915="false"
 ENV BUILD_JOYDEV="false"
 ENV LIBNVIDIA_CONTAINER_V="latest"
@@ -31,9 +38,13 @@ ENV LE_DRV_V="latest"
 ENV NV_DRV_V="latest"
 ENV SECCOMP_V="latest"
 ENV ZFS_V="latest"
+ENV TARGETCLI_FB_V="latest"
+ENV RTSLIB_FB_V="latest"
+ENV CONFIGSHELL_FB_V="latest"
 ENV CLEANUP="full"
 ENV CREATE_BACKUP="true"
 ENV UNAME=""
+ENV BEEP="true"
 ENV SAVE_LOG="false"
 ENV UMASK=000
 ENV UID=99
