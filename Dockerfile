@@ -13,7 +13,7 @@ RUN	apt-get update && \
 	wget -q -nc --show-progress --progress=bar:force:noscroll -O xz.tar https://github.com/ich777/docker-unraid-kernel-helper/raw/6.9.0/xz.tar && \
 	tar -C / -xvf /tmp/xz.tar && \
 	rm /tmp/xz.tar && \
-	wget -q -nc --show-progress --progress=bar:force:noscroll https://github.com/ich777/python-unraid/raw/3.8.4rc1/python-3.8.4rc1-x86_64-1.tgz && \
+	wget -q -nc --show-progress --progress=bar:force:noscroll https://github.com/ich777/python-unraid/raw/3.7.3/python-3.7.3-x86_64-1.tgz && \
 	wget -q -nc --show-progress --progress=bar:force:noscroll https://github.com/ich777/python-unraid/raw/3.7.3/gobject-introspection-1.46.0-x86_64-1.txz && \
 	rm -rf /var/lib/apt/lists/*
 
