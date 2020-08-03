@@ -934,3 +934,6 @@ echo "----MAKE SURE TO BACKUP YOUR OLD FILES FROM----"
 echo "----YOUR UNRAID USB STICK IN CASE SOMETHING----"
 echo "------WENT WRONG WITH THE KERNEL COMPILING-----"
 echo "-----------------------------------------------"
+if [ "${BEEP}" == "true" ]; then
+	beep -f 933 -l 300 -n -f 933 -l 100 -n -f 933 -l 100 -n -f 933 -l 100 -n -f 1047 -l 400
+fi
