@@ -11,12 +11,14 @@ RUN	echo "deb http://deb.debian.org/debian bullseye main" >> /etc/apt/sources.li
 	export PATH=$PATH:/usr/local/go/bin && \
 	rm -R /tmp/go* && \
 	rm -R /lib/x86_64-linux-gnu/liblzma.* && \
+	rm -rf /var/lib/apt/lists/*
+
+RUN cd /tmp && \
 	wget -q -nc --show-progress --progress=bar:force:noscroll -O xz.tar https://github.com/ich777/docker-unraid-kernel-helper/raw/6.9.0/xz.tar && \
 	tar -C / -xvf /tmp/xz.tar && \
 	rm /tmp/xz.tar && \
-	wget -q -nc --show-progress --progress=bar:force:noscroll https://github.com/ich777/python-unraid/raw/3.8.4rc1/python-3.8.4rc1-x86_64-1.tgz && \
-	wget -q -nc --show-progress --progress=bar:force:noscroll https://github.com/ich777/python-unraid/raw/3.7.3/gobject-introspection-1.46.0-x86_64-1.txz && \
-	rm -rf /var/lib/apt/lists/*
+	wget -q -nc --show-progress --progress=bar:force:noscroll https://github.com/ich777/python-unraid/raw/3.8.5/python-3.8.5-x86_64-1.tgz && \
+	wget -q -nc --show-progress --progress=bar:force:noscroll https://github.com/ich777/python-unraid/raw/3.7.3/gobject-introspection-1.46.0-x86_64-1.txz
 
 ENV DATA_DIR="/usr/src"
 ENV UNRAID_V=6.9.0
