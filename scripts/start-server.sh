@@ -1221,7 +1221,7 @@ else
 
 	if [ "${BUILD_ISCSI}" == "true" ]; then
 		echo "----iSCSI is built with the follwing versions:----"
-		echo "-----------------Python v3.8.4rc1-----------------"
+		echo "------------------Python v3.8.5-------------------"
 		echo "-----------GObject-Introspection v1.46.0----------"
 		echo "-------------'targetcli-fb' v${TARGETCLI_FB_V}--------------"
 		echo "--------------'trslib-fb' v${RTSLIB_FB_V}----------------"
