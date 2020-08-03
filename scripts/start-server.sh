@@ -415,7 +415,7 @@ else
 	if [ ! -d ${DATA_DIR}/stock/beta ]; then
 		mkdir -p ${DATA_DIR}/stock/beta
 	fi
-	if [ ! -f IMAGES_FILE_PATH=${DATA_DIR}/stock/beta/bzroot ] || [ ! -f IMAGES_FILE_PATH=${DATA_DIR}/stock/beta/bzimage ] || [ ! -f IMAGES_FILE_PATH=${DATA_DIR}/stock/beta/bzmodules ] || [ ! -f IMAGES_FILE_PATH=${DATA_DIR}/stock/beta/bzfirmware ]; then
+	if [ ! -f ${DATA_DIR}/stock/beta/bzroot ] || [ ! -f ${DATA_DIR}/stock/beta/bzimage ] || [ ! -f ${DATA_DIR}/stock/beta/bzmodules ] || [ ! -f ${DATA_DIR}/stock/beta/bzfirmware ]; then
 		cd ${DATA_DIR}/stock/beta
 		echo "---One or more Stock Unraid v${UNRAID_V}-${BETA_BUILD} files not found, downloading...---"
 		if [ ! -f ${DATA_DIR}/unRAIDServer-${UNRAID_V}-${BETA_BUILD}-x86_64.zip ]; then
