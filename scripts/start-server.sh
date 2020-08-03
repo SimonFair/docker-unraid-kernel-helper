@@ -401,6 +401,7 @@ elif [ -z "${BETA_BUILD}" ]; then
 			elif [ ${DATA_DIR}/unRAIDServer-${UNRAID_V}-x86_64.zip ]; then
 				echo "---unRAIDServer-${UNRAID_V}-x86_64.zip found locally---"
 			fi
+			sleep 2
 			echo "---Extracting files---"
 			unzip -o ${DATA_DIR}/unRAIDServer-${UNRAID_V}-x86_64.zip
 			if [ ! -f ${DATA_DIR}/unRAIDServer-${UNRAID_V}-x86_64.zip ]; then
@@ -428,6 +429,7 @@ else
 		elif [ ${DATA_DIR}/unRAIDServer-${UNRAID_V}-${BETA_BUILD}-x86_64.zip ]; then
 			echo "---unRAIDServer-${UNRAID_V}-${BETA_BUILD}-x86_64.zip found locally---"
 		fi
+		sleep 2
 		echo "---Extracting files---"
 		unzip -o ${DATA_DIR}/unRAIDServer-${UNRAID_V}-${BETA_BUILD}-x86_64.zip
 		if [ ! -f ${DATA_DIR}/unRAIDServer-${UNRAID_V}-${BETA_BUILD}-x86_64.zip ]; then
