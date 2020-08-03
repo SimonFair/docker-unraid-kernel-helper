@@ -10,10 +10,10 @@ RUN	echo "deb http://deb.debian.org/debian bullseye main" >> /etc/apt/sources.li
 	tar -C /usr/local -xvzf go.tar.gz && \
 	export PATH=$PATH:/usr/local/go/bin && \
 	rm -R /tmp/go* && \
-	rm -R /lib/x86_64-linux-gnu/liblzma.* && \
 	rm -rf /var/lib/apt/lists/*
 
-RUN cd /tmp && \
+RUN rm -R /lib/x86_64-linux-gnu/liblzma.* && \
+	cd /tmp && \
 	wget -q -nc --show-progress --progress=bar:force:noscroll -O xz.tar https://github.com/ich777/docker-unraid-kernel-helper/raw/6.9.0/xz.tar && \
 	tar -C / -xvf /tmp/xz.tar && \
 	rm /tmp/xz.tar && \
