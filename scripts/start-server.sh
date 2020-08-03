@@ -773,12 +773,12 @@ zpool export -a &" >> ${DATA_DIR}/bzroot-extracted-$UNAME/usr/local/emhttp/plugi
 fi
 
 if [ "${BUILD_ISCSI}" == "true" ]; then
-	## Install custom Python build v3.8.4rc1
+	## Install custom Python build v3.8.5
 	if [ ! -f /bin/du ]; then
 		cp ${DATA_DIR}/bzroot-extracted-$UNAME/bin/du /bin/
 	fi
-	echo "---Installing Python v3.8.4rc1---"
-	${DATA_DIR}/bzroot-extracted-$UNAME/sbin/installpkg --root ${DATA_DIR}/bzroot-extracted-$UNAME /tmp/python-3.8.4rc1-x86_64-1.tgz
+	echo "---Installing Python v3.8.5---"
+	${DATA_DIR}/bzroot-extracted-$UNAME/sbin/installpkg --root ${DATA_DIR}/bzroot-extracted-$UNAME /tmp/python-3.8.5-x86_64-1.tgz
 
 	## Install required libraries 'gobject-introspection'
 	if [ ! -f /bin/du ]; then
