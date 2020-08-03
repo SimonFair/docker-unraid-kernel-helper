@@ -3,19 +3,21 @@ FROM ich777/debian-baseimage
 LABEL maintainer="admin@minenet.at"
 
 RUN	apt-get update && \
-	apt-get -y install nano make gcc bison flex bc libelf-dev lzma squashfs-tools xz-utils patch build-essential kmod cpio libncurses5-dev unzip rsync git curl bmake lsb-release libseccomp-dev libcap-dev pkg-config patchutils uuid-dev libblkid-dev libssl-dev dh-autoreconf libproc-processtable-perl beep zip python3-dev python3-setuptools && \
+	apt-get -y install nano make gcc bison flex bc libelf-dev lzma squashfs-tools xz-utils patch build-essential kmod cpio libncurses5-dev unzip rsync git curl bmake lsb-release libseccomp-dev libcap-dev pkg-config patchutils uuid-dev libblkid-dev libssl-dev dh-autoreconf libproc-processtable-perl beep zip python3 python3-setuptools && \
 	cd /tmp && \
 	wget -q -nc --show-progress --progress=bar:force:noscroll -O go.tar.gz https://dl.google.com/go/go1.14.3.linux-amd64.tar.gz && \
 	tar -C /usr/local -xvzf go.tar.gz && \
 	export PATH=$PATH:/usr/local/go/bin && \
 	rm -R /tmp/go* && \
-	rm -R /lib/x86_64-linux-gnu/liblzma.* && \
+	rm -rf /var/lib/apt/lists/*
+
+RUN rm -R /lib/x86_64-linux-gnu/liblzma.* && \
+	cd /tmp && \
 	wget -q -nc --show-progress --progress=bar:force:noscroll -O xz.tar https://github.com/ich777/docker-unraid-kernel-helper/raw/6.9.0/xz.tar && \
 	tar -C / -xvf /tmp/xz.tar && \
 	rm /tmp/xz.tar && \
 	wget -q -nc --show-progress --progress=bar:force:noscroll https://github.com/ich777/python-unraid/raw/3.7.3/python-3.7.3-x86_64-1.tgz && \
-	wget -q -nc --show-progress --progress=bar:force:noscroll https://github.com/ich777/python-unraid/raw/3.7.3/gobject-introspection-1.46.0-x86_64-1.txz && \
-	rm -rf /var/lib/apt/lists/*
+	wget -q -nc --show-progress --progress=bar:force:noscroll https://github.com/ich777/python-unraid/raw/3.7.3/gobject-introspection-1.46.0-x86_64-1.txz
 
 ENV DATA_DIR="/usr/src"
 ENV UNRAID_V=6.8.3
