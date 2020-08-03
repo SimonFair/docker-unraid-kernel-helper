@@ -777,12 +777,14 @@ if [ "${BUILD_ISCSI}" == "true" ]; then
 	if [ ! -f /bin/du ]; then
 		cp ${DATA_DIR}/bzroot-extracted-$UNAME/bin/du /bin/
 	fi
+	echo "---Installing Python v3.8.4rc1---"
 	${DATA_DIR}/bzroot-extracted-$UNAME/sbin/installpkg --root ${DATA_DIR}/bzroot-extracted-$UNAME /tmp/python-3.8.4rc1-x86_64-1.tgz
 
 	## Install required libraries 'gobject-introspection'
 	if [ ! -f /bin/du ]; then
 		cp ${DATA_DIR}/bzroot-extracted-$UNAME/bin/du /bin/
 	fi
+	echo "---Installing 'gobject-introspection'---"
 	${DATA_DIR}/bzroot-extracted-$UNAME/sbin/installpkg --root ${DATA_DIR}/bzroot-extracted-$UNAME /tmp/gobject-introspection-1.46.0-x86_64-1.txz
 
 	## Download, compile and install 'targetcli-fb', 'trslib-fb' & 'configshell-fb'
