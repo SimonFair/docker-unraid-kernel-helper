@@ -400,10 +400,10 @@ elif [ -z "${BETA_BUILD}" ]; then
 				fi
 			elif [ ${DATA_DIR}/unRAIDServer-${UNRAID_V}-x86_64.zip ]; then
 				echo "---unRAIDServer-${UNRAID_V}-x86_64.zip found locally---"
+				cp ${DATA_DIR}/unRAIDServer-${UNRAID_V}-x86_64.zip ${DATA_DIR}/stock/${UNRAID_V}/unRAIDServer-${UNRAID_V}-x86_64.zip
 			fi
-			sleep 2
 			echo "---Extracting files---"
-			unzip -o ${DATA_DIR}/unRAIDServer-${UNRAID_V}-x86_64.zip
+			unzip -o ${DATA_DIR}/stock/${UNRAID_V}/unRAIDServer-${UNRAID_V}-x86_64.zip
 			if [ ! -f ${DATA_DIR}/unRAIDServer-${UNRAID_V}-x86_64.zip ]; then
 				mv ${DATA_DIR}/stock/${UNRAID_V}/unRAIDServer-${UNRAID_V}-x86_64.zip ${DATA_DIR}
 			fi
@@ -428,10 +428,10 @@ else
 			fi
 		elif [ ${DATA_DIR}/unRAIDServer-${UNRAID_V}-${BETA_BUILD}-x86_64.zip ]; then
 			echo "---unRAIDServer-${UNRAID_V}-${BETA_BUILD}-x86_64.zip found locally---"
+			cp ${DATA_DIR}/unRAIDServer-${UNRAID_V}-${BETA_BUILD}-x86_64.zip ${DATA_DIR}/stock/beta/unRAIDServer-${UNRAID_V}-${BETA_BUILD}-x86_64.zip
 		fi
-		sleep 2
 		echo "---Extracting files---"
-		unzip -o ${DATA_DIR}/unRAIDServer-${UNRAID_V}-${BETA_BUILD}-x86_64.zip
+		unzip -o ${DATA_DIR}/stock/beta/unRAIDServer-${UNRAID_V}-${BETA_BUILD}-x86_64.zip
 		if [ ! -f ${DATA_DIR}/unRAIDServer-${UNRAID_V}-${BETA_BUILD}-x86_64.zip ]; then
 			mv ${DATA_DIR}/stock/beta/unRAIDServer-${UNRAID_V}-${BETA_BUILD}-x86_64.zip ${DATA_DIR}
 		fi
