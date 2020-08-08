@@ -1052,7 +1052,10 @@ EOF
 		cd ${DATA_DIR}/go/src/github.com/NVIDIA/nvidia-container-runtime
 		git checkout v$NVIDIA_CONTAINER_RUNTIME_V
 		cd ${DATA_DIR}/go/src/github.com/NVIDIA/nvidia-container-runtime/src
-		make build
+		until make build; do
+			echo Something went wrong, retrying in 5 seconds...
+			sleep 5
+		done
 		cp ${DATA_DIR}/go/src/github.com/NVIDIA/nvidia-container-runtime/src/nvidia-container-runtime ${DATA_DIR}/bzroot-extracted-$UNAME/usr/bin
 
 		### Compile 'nvidia-container-toolkit' v3.2.0 and up
