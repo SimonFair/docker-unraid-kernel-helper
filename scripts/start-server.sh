@@ -852,6 +852,9 @@ if [ "${BUILD_ISCSI}" == "true" ]; then
 	python3 setup.py build
 	python3 setup.py install --user
 
+	## Create config directory in bzroot image
+	mkdir -p ${DATA_DIR}/bzroot-extracted-$UNAME/etc/target
+
 	## Create .targetcli directory in /root/.targetcli in bzroot image
 	mkdir -p ${DATA_DIR}/bzroot-extracted-$UNAME/root/.targetcli
 
