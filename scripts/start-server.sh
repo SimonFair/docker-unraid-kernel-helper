@@ -323,7 +323,7 @@ if [ ! -f $IMAGES_FILE_PATH/bzroot ]; then
 	sleep infinity
 fi
 cd ${DATA_DIR}/bzroot-extracted-$UNAME
-dd if=$IMAGES_FILE_PATH/bzroot bs=512 count=$(cpio -ivt -H newc < $IMAGES_FILE_PATH/bzroot 2>&1 > /dev/null | awk '{print $1}') of=${DATA_DIR}/output-$UNAME/bzroot
+dd if=$IMAGES_FILE_PATH/bzroot bs=512 count=$(cpio -ivt -H newc < $IMAGES_FILE_PATH/bzroot 2>&1 > /dev/null | awk '{print $1}') of=${DATA_DIR}/output-$UNAME/microcode
 dd if=$IMAGES_FILE_PATH/bzroot bs=512 skip=$(cpio -ivt -H newc < $IMAGES_FILE_PATH/bzroot 2>&1 > /dev/null | awk '{print $1}') | xzcat | cpio -i -d -H newc --no-absolute-filenames
 
 ## Preparing directorys modules and firmware
@@ -711,7 +711,10 @@ if [ "${BUILD_NVIDIA}" == "true" ]; then
 	git checkout v$LIBNVIDIA_CONTAINER_V
 	sed -i '/if (syscall(SYS_pivot_root, ".", ".") < 0)/,+1 d' ${DATA_DIR}/libnvidia-container/src/nvc_ldcache.c
 	sed -i '/if (umount2(".", MNT_DETACH) < 0)/,+1 d' ${DATA_DIR}/libnvidia-container/src/nvc_ldcache.c
-	DESTDIR=${DATA_DIR}/bzroot-extracted-$UNAME make install prefix=/usr
+	until DESTDIR=${DATA_DIR}/bzroot-extracted-$UNAME make install prefix=/usr; do
+		echo Something went wrong, retrying in 5 seconds...
+		sleep 5
+	done
 
 	## Create Docker daemon config file
 	mkdir -p ${DATA_DIR}/bzroot-extracted-$UNAME/etc/docker
@@ -747,7 +750,10 @@ EOF
 		### Compile 'nvidia-container-runtime' v3.1.4 and lower
 		echo "---Compiling 'nvidia-container-runtime', this can take some time, please wait!---"
 		cd ${DATA_DIR}/go/src/github.com/NVIDIA/nvidia-container-runtime/runtime/src
-		make
+		until make; do
+			echo Something went wrong, retrying in 5 seconds...
+			sleep 5
+		done
 		cp ${DATA_DIR}/go/src/github.com/NVIDIA/nvidia-container-runtime/runtime/src/nvidia-container-runtime ${DATA_DIR}/bzroot-extracted-$UNAME/usr/bin
 	else
 		### Compile 'nvidia-container-runtime' v3.2.0 and up
@@ -758,7 +764,10 @@ EOF
 		cd ${DATA_DIR}/go/src/github.com/NVIDIA/nvidia-container-runtime
 		git checkout v$NVIDIA_CONTAINER_RUNTIME_V
 		cd ${DATA_DIR}/go/src/github.com/NVIDIA/nvidia-container-runtime/src
-		make build
+		until make build; do
+			echo Something went wrong, retrying in 5 seconds...
+			sleep 5
+		done
 		cp ${DATA_DIR}/go/src/github.com/NVIDIA/nvidia-container-runtime/src/nvidia-container-runtime ${DATA_DIR}/bzroot-extracted-$UNAME/usr/bin
 
 		### Compile 'nvidia-container-toolkit' v3.2.0 and up
@@ -767,7 +776,10 @@ EOF
 		git clone https://github.com/NVIDIA/nvidia-container-toolkit
 		cd ${DATA_DIR}/go/src/github.com/NVIDIA/nvidia-container-toolkit
 		git checkout v$CONTAINER_TOOLKIT_V
-		make binary
+		until make binary; do
+			echo Something went wrong, retrying in 5 seconds...
+			sleep 5
+		done
 		cp ${DATA_DIR}/go/src/github.com/NVIDIA/nvidia-container-toolkit/nvidia-container-toolkit ${DATA_DIR}/bzroot-extracted-$UNAME/usr/bin
 		cd ${DATA_DIR}/bzroot-extracted-$UNAME/usr/bin
 		ln -s /usr/bin/nvidia-container-toolkit nvidia-container-runtime-hook
@@ -811,7 +823,11 @@ mksquashfs /lib/firmware ${DATA_DIR}/output-$UNAME/bzfirmware -noappend
 ## Compress bzroot image
 echo "---Creating 'bzroot', this can take some time, please wait!---"
 cd ${DATA_DIR}/bzroot-extracted-$UNAME
-find . | cpio -o -H newc | xz --format=lzma >> ${DATA_DIR}/output-$UNAME/bzroot
+cd ${DATA_DIR}/bzroot-extracted-$UNAME
+find . | cpio -o -H newc | xz --check=crc32 --ia64 --lzma2=preset=9e --threads=${CPU_COUNT} >> ${DATA_DIR}/output-$UNAME/bzroot.part
+cat ${DATA_DIR}/output-$UNAME/microcode ${DATA_DIR}/output-$UNAME/bzroot.part > ${DATA_DIR}/output-$UNAME/bzroot
+rm ${DATA_DIR}/output-$UNAME/microcode
+rm ${DATA_DIR}/output-$UNAME/bzroot.part
 
 ## Generate checksums
 echo "---Generationg checksums---"
