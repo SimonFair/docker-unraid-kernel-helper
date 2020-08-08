@@ -15,3 +15,4 @@ CONFIG_VHOST_SCSI=m
 # CONFIG_MOST is not set
 # CONFIG_OCFS2_FS is not set
 # CONFIG_DLM is not set
+# CONFIG_SBP_TARGET is not set
