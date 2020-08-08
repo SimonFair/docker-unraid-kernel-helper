@@ -456,7 +456,7 @@ if [ ! -f $IMAGES_FILE_PATH/bzroot ]; then
 	sleep infinity
 fi
 cd ${DATA_DIR}/bzroot-extracted-$UNAME
-dd if=$IMAGES_FILE_PATH/bzroot bs=512 count=$(cpio -ivt -H newc < $IMAGES_FILE_PATH/bzroot 2>&1 > /dev/null | awk '{print $1}') of=${DATA_DIR}/output-$UNAME/bzroot
+dd if=$IMAGES_FILE_PATH/bzroot bs=512 count=$(cpio -ivt -H newc < $IMAGES_FILE_PATH/bzroot 2>&1 > /dev/null | awk '{print $1}') of=${DATA_DIR}/output-$UNAME/microcode
 dd if=$IMAGES_FILE_PATH/bzroot bs=512 skip=$(cpio -ivt -H newc < $IMAGES_FILE_PATH/bzroot 2>&1 > /dev/null | awk '{print $1}') | xzcat | cpio -i -d -H newc --no-absolute-filenames
 
 ## Preparing directorys modules and firmware
@@ -1099,7 +1099,10 @@ mksquashfs /lib/firmware ${DATA_DIR}/output-$UNAME/bzfirmware -noappend
 ## Compress bzroot image
 echo "---Creating 'bzroot', this can take some time, please wait!---"
 cd ${DATA_DIR}/bzroot-extracted-$UNAME
-find . | cpio -o -H newc | xz --format=lzma --threads=${CPU_COUNT} >> ${DATA_DIR}/output-$UNAME/bzroot
+find . | cpio -o -H newc | xz --check=crc32 --ia64 --lzma2=preset=9e --threads=${CPU_COUNT} >> ${DATA_DIR}/output-$UNAME/bzroot.part
+cat ${DATA_DIR}/output-$UNAME/microcode ${DATA_DIR}/output-$UNAME/bzroot.part > ${DATA_DIR}/output-$UNAME/bzroot
+rm ${DATA_DIR}/output-$UNAME/microcode
+rm ${DATA_DIR}/output-$UNAME/bzroot.part
 
 ## Generate checksums
 echo "---Generationg checksums---"
