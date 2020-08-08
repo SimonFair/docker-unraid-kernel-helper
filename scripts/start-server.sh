@@ -861,7 +861,7 @@ if [ "${BUILD_ISCSI}" == "true" ]; then
 if [ ! -d /boot/config/iscsi/.targetcli ]; then
   mkdir -p /boot/config/iscsi/.targetcli
 fi
-ln -s /boot/config/iscsi /etc/target
+ln -s /boot/config/iscsi/saveconfig.json /etc/target/saveconfig.json
 ln -s /boot/config/iscsi/.targetcli/prefs.bin /root/.targetcli/prefs.bin' >> ${DATA_DIR}/bzroot-extracted-$UNAME/etc/rc.d/rc.S
 
 	## Load/unload iSCSI configuration on array start/stop
