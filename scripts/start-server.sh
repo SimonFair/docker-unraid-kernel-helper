@@ -852,13 +852,17 @@ if [ "${BUILD_ISCSI}" == "true" ]; then
 	python3 setup.py build
 	python3 setup.py install --user
 
-	## Create iSCSI directory at boot on Boot Device if does not exist and link it to /etc/target
+	## Create .targetcli directory in /root/.targetcli in bzroot image
+	mkdir -p ${DATA_DIR}/bzroot-extracted-$UNAME/root/.targetcli
+
+	## Create iscsi & .targetcli directory at boot on Boot Device if does not exist and link it to /root/.targetcli/prefs.bin
 	echo '
-# Create iSCSI directory on boot device and link it to the config directory
-if [ ! -d /boot/config/iscsi ]; then
-  mkdir -p /boot/config/iscsi
+# Create iscsi & .targetcli directory at boot on Boot Device if does not exist and link it to /root/.targetcli/prefs.bin
+if [ ! -d /boot/config/iscsi/.targetcli ]; then
+  mkdir -p /boot/config/iscsi/.targetcli
 fi
-ln -s /boot/config/iscsi /etc/target' >> ${DATA_DIR}/bzroot-extracted-$UNAME/etc/rc.d/rc.S
+ln -s /boot/config/iscsi /etc/target
+ln -s /boot/config/iscsi/.targetcli/prefs.bin /root/.targetcli/prefs.bin' >> ${DATA_DIR}/bzroot-extracted-$UNAME/etc/rc.d/rc.S
 
 	## Load/unload iSCSI configuration on array start/stop
 	echo "
