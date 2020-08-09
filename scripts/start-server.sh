@@ -1118,7 +1118,7 @@ mksquashfs /lib/firmware ${DATA_DIR}/output-$UNAME/bzfirmware -noappend
 ## Compress bzroot image
 echo "---Creating 'bzroot', this can take some time, please wait!---"
 cd ${DATA_DIR}/bzroot-extracted-$UNAME
-find . | cpio -o -H newc | xz --ia64 --lzma2=preset=9e --threads=${CPU_COUNT} >> ${DATA_DIR}/output-$UNAME/bzroot.part
+find . | cpio -o -H newc | xz --check=crc32 --ia64 --lzma2=preset=9e --threads=${CPU_COUNT} >> ${DATA_DIR}/output-$UNAME/bzroot.part
 cat ${DATA_DIR}/output-$UNAME/microcode ${DATA_DIR}/output-$UNAME/bzroot.part > ${DATA_DIR}/output-$UNAME/bzroot
 rm ${DATA_DIR}/output-$UNAME/microcode
 rm ${DATA_DIR}/output-$UNAME/bzroot.part
