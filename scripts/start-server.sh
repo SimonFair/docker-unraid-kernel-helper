@@ -718,6 +718,16 @@ if [ "${BUILD_DVB}" == "true" ]; then
 		make dir DIR=../linux_media
 		make -j${CPU_COUNT}
 		make install
+		cd ${DATA_DIR}
+		## Download and install TBS Tuner Firmwares
+		## https://github.com/tbsdtv/linux_media/wiki#firmware
+		if wget -q -nc --show-progress --progress=bar:force:noscroll -O ${DATA_DIR}/tbs-tuner-firmwares_v1.0.tar.bz2 http://www.tbsdtv.com/download/document/linux/tbs-tuner-firmwares_v1.0.tar.bz2 ; then
+			echo "---Successfully downloaded TBS Tuner Firmwares v1.0---"
+		else
+			echo "---Download of TBS Tuner Firmwares v1.0 failed, putting container into sleep mode!---"
+			sleep infinity
+		fi
+		tar jxvf ${DATA_DIR}/tbs-tuner-firmwares_v1.0.tar.bz2 -C /lib/firmware/
 	fi
 fi
 
