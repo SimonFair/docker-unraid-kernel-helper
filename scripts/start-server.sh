@@ -205,6 +205,13 @@ if [ "${BUILD_DVB}" == "true" ]; then
 	else
 		echo "---LibreELEC driver manually set to: v$LE_DRV_V---"
 	fi
+	## Set version for TBS Open Source drivers
+	if [ -z "${TBS_MEDIA_BUILD_V}" ]; then
+		echo "---Building with TBS Open Source drivers v2020-07-07---"
+		TBS_MEDIA_BUILD_V="2020-07-07"
+	else
+		echo "---TBS Open Source drivers manually set to: v${TBS_MEDIA_BUILD_V}---"
+	fi
 else
 	echo "---Build of DVB driver/modules/firmware skipped!---"
 fi
@@ -703,24 +710,34 @@ if [ "${BUILD_DVB}" == "true" ]; then
 		## https://github.com/tbsdtv
 		echo "---Downloading TBS OpenSource drivers, please wait!---"
 		cd ${DATA_DIR}
-		if [ ! -d ${DATA_DIR}/TBS-OpenSource ]; then
-			mkdir ${DATA_DIR}/TBS-OpenSource
+		if [ ! -d ${DATA_DIR}/media_build-${TBS_MEDIA_BUILD_V} ]; then
+			mkdir ${DATA_DIR}/media_build-${TBS_MEDIA_BUILD_V}
 		fi
-		cd ${DATA_DIR}/TBS-OpenSource
-		git clone https://github.com/tbsdtv/media_build.git
-		cd ${DATA_DIR}/TBS-OpenSource/media_build
-		git checkout master
-		cd ${DATA_DIR}/TBS-OpenSource
-		git clone https://github.com/tbsdtv/linux_media.git --depth=1
-		cd ${DATA_DIR}/TBS-OpenSource/linux_media
-		git checkout latest
-		cd ${DATA_DIR}/TBS-OpenSource/media_build
-		make dir DIR=../linux_media
+		if [ ! -f ${DATA_DIR}/media_build-v${TBS_MEDIA_BUILD_V}.tar.bz2 ]; then
+			echo "---Downloading 'media_build' drivers v${TBS_MEDIA_BUILD_V}, please wait!---"
+			if wget -q -nc --show-progress --progress=bar:force:noscroll -O ${DATA_DIR}/media_build-v${TBS_MEDIA_BUILD_V}.tar.bz2 http://www.tbsdtv.com/download/document/linux/media_build-${TBS_MEDIA_BUILD_V}.tar.bz2 ; then
+				echo "---Successfully downloaded 'media_build' drivers v${TBS_MEDIA_BUILD_V}---"
+			else
+				echo "---Download of 'media_build' drivers v${TBS_MEDIA_BUILD_V} failed, putting container into sleep mode!---"
+				sleep infinity
+			fi
+		else
+			echo "---'media_build' drivers v${TBS_MEDIA_BUILD_V} found locally---"
+		fi
+		rm -rf /lib/modules/${UNAME}/kernel/drivers/media/
+		tar -C ${DATA_DIR}/media_build-${TBS_MEDIA_BUILD_V} --strip-components=1 -xf ${DATA_DIR}/media_build-v${TBS_MEDIA_BUILD_V}.tar.bz2
+		cd ${DATA_DIR}/media_build-${TBS_MEDIA_BUILD_V}
+		${DATA_DIR}/media_build-${TBS_MEDIA_BUILD_V}/patch-kernel.sh
+		make distclean
+		make stagingconfig
 		make -j${CPU_COUNT}
+		rm -rf /lib/modules/${UNAME}/kernel/drivers/media
+		rm -rf /lib/modules/${UNAME}/kernel/drivers/staging/media
+		rm -rf /lib/modules/${UNAME}/extra
 		make install
-		cd ${DATA_DIR}
 		## Download and install TBS Tuner Firmwares
 		## https://github.com/tbsdtv/linux_media/wiki#firmware
+		cd ${DATA_DIR}
 		if [ ! -f ${DATA_DIR}/tbs-tuner-firmwares_v1.0.tar.bz2 ]; then
 			echo "---Downloading TBS Tuner Firmwares v1.0, please wait!---"
 			if wget -q -nc --show-progress --progress=bar:force:noscroll -O ${DATA_DIR}/tbs-tuner-firmwares_v1.0.tar.bz2 http://www.tbsdtv.com/download/document/linux/tbs-tuner-firmwares_v1.0.tar.bz2 ; then
