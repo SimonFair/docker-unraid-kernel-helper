@@ -501,6 +501,9 @@ if [ "${BETA_BUILD}" == "true" ]; then
 		CUR_K_V="$(echo $UNAME | cut -d '-' -f 1)"
 		MAIN_V="$(echo $UNAME | cut -d '.' -f 1)"
 	fi
+	if [ "${CUR_K_V##*.}" == "0" ]; then
+		CUR_K_V="${CUR_K_V%.*}"
+	fi
 	## Download Kernel to data directory & extract it if not present
 	cd ${DATA_DIR}
 	if [ ! -d ${DATA_DIR}/linux-$UNAME ]; then
@@ -532,6 +535,9 @@ else
 		UNAME="$(echo $UNAME | cut -d '+' -f1)"
 		CUR_K_V="$(echo $UNAME | cut -d '-' -f 1)"
 		MAIN_V="$(echo $UNAME | cut -d '.' -f 1)"
+	fi
+	if [ "${CUR_K_V##*.}" == "0" ]; then
+		CUR_K_V="${CUR_K_V%.*}"
 	fi
 	## Download Kernel to data directory & extract it if not present
 	cd ${DATA_DIR}
