@@ -4,13 +4,13 @@ if [ "${BETA_BUILD}" == "true" ]; then
 	if [ -z "${UNAME}" ]; then
 		UNAME="beta"
 	else
-		UNAME="${UNAME}+beta"
+		UNAME="${UNAME}-Unraid+beta"
 	fi
 else
 	if [ -z "${UNAME}" ]; then
 		UNAME="stock"
 	else
-		UNAME="${UNAME}+stock"
+		UNAME="${UNAME}-Unraid+stock"
 	fi
 fi
 if [ "$CPU_COUNT" == "all" ];then
