@@ -116,35 +116,62 @@ if [ "$USER_PATCHES" == "true" ]; then
 	echo "------------------------------------------------------"
 	echo "----USER PATCHES --- USER PATCHES --- USER PATCHES----"
 	echo "------------------------------------------------------"
+fi
+if [ "${DONTWAIT}" != "true" ]; then
+	if [ "${USER_PATCHES}" == "true" ]; then
+		sleep 60
+	fi
 	sleep 60
 fi
-sleep 60
+
+## Check if versions file is present if not download it otherwise update it
+if [ ! -f /tmp/Unraid-Kernel-Helper ]; then
+	if wget -q -nc --show-progress --progress=bar:force:noscroll -O /tmp/Unraid-Kernel-Helper https://github.com/ich777/versions/raw/master/Unraid-Kernel-Helper ; then
+		echo "---Successfully downloaded versions file---"
+	else
+		echo "---Can't download versions file, continuing without and trying to get latest version numbers from Github repositories directly---"
+	fi
+else
+	echo "---Found old versions file, deleting old file and downloading new file---"
+	rm -R /tmp/Unraid-Kernel-Helper
+	if wget -q -nc --show-progress --progress=bar:force:noscroll -O /tmp/Unraid-Kernel-Helper https://github.com/ich777/versions/raw/master/Unraid-Kernel-Helper ; then
+		echo "---Successfully downloaded versions file---"
+	else
+		echo "---Can't download versions file, continuing without and trying to get latest version numbers from Github repositories directly---"
+	fi
+fi
 
 if [ "${BUILD_DVB}" == "true" ]; then
 	## Get latest version from DigitalDevices drivers
 	if [ "${DD_DRV_V}" == "latest" ]; then
-		echo "---Trying to get latest version for DigitalDevices driver---"
-		DD_DRV_V="$(curl -s https://api.github.com/repos/DigitalDevices/dddvb/releases/latest | grep tag_name | cut -d '"' -f4)"
+		DD_DRV_V="$(grep DD_DRV_V /tmp/Unraid-Kernel-Helper -s | cut -d '=' -f2)"
 		if [ -z $DD_DRV_V ]; then
-			echo "---Can't get latest version for DigitalDevices driver, putting container into sleep mode!---"
-			sleep infinity
+			echo "---Trying to get latest version for DigitalDevices drivers from Github---"
+			DD_DRV_V="$(curl -s https://api.github.com/repos/DigitalDevices/dddvb/releases/latest | grep tag_name | cut -d '"' -f4)"
+			if [ -z $DD_DRV_V ]; then
+				echo "---Can't get latest version for DigitalDevices drivers from Github, putting container into sleep mode!---"
+				sleep infinity
+			fi
 		fi
-		echo "---Latest version for DigitalDevices driver: v$DD_DRV_V---"
+		echo "---Latest version for DigitalDevices drivers: v$DD_DRV_V---"
 	else
-		echo "---DigitalDevices driver manually set to: v$DD_DRV_V---"
+		echo "---DigitalDevices drivers manually set to: v$DD_DRV_V---"
 	fi
 
 	## Get latest version from LibreELEC drivers
 	if [ "${LE_DRV_V}" == "latest" ]; then
-		echo "---Trying to get latest version for LibreELEC driver---"
-		LE_DRV_V="$(curl -s https://api.github.com/repos/LibreELEC/dvb-firmware/releases/latest | grep tag_name | cut -d '"' -f4)"
+		LE_DRV_V="$(grep LE_DRV_V /tmp/Unraid-Kernel-Helper -s | cut -d '=' -f2)"
 		if [ -z $LE_DRV_V ]; then
-			echo "---Can't get latest version for LibreELEC driver, putting container into sleep mode!---"
-			sleep infinity
+			echo "---Trying to get latest version for LibreELEC drivers from Github---"
+			LE_DRV_V="$(curl -s https://api.github.com/repos/LibreELEC/dvb-firmware/releases/latest | grep tag_name | cut -d '"' -f4)"
+			if [ -z $LE_DRV_V ]; then
+				echo "---Can't get latest version for LibreELEC drivers from Github, putting container into sleep mode!---"
+				sleep infinity
+			fi
 		fi
-		echo "---Latest version for LibreELEC driver: v$LE_DRV_V---"
+		echo "---Latest version for LibreELEC drivers: v$LE_DRV_V---"
 	else
-		echo "---LibreELEC driver manually set to: v$LE_DRV_V---"
+		echo "---LibreELEC drivers manually set to: v$LE_DRV_V---"
 	fi
 else
 	echo "---Build of DVB driver/modules/firmware skipped!---"
@@ -153,11 +180,14 @@ fi
 if [ "${BUILD_NVIDIA}" == "true" ]; then
 	## Get latest version from nVidia drivers
 	if [ "${NV_DRV_V}" == "latest" ]; then
-		echo "---Trying to get latest version for nVidia driver---"
-		NV_DRV_V="$(curl -s http://download.nvidia.com/XFree86/Linux-x86_64/latest.txt | cut -d ' ' -f1)"
+		NV_DRV_V="$(grep NV_DRV_V /tmp/Unraid-Kernel-Helper -s | cut -d '=' -f2)"
 		if [ -z $NV_DRV_V ]; then
-			echo "---Can't get latest version for nVidia driver, putting container into sleep mode!---"
-			sleep infinity
+			echo "---Trying to get latest version for nVidia driver from nVidia download server---"
+			NV_DRV_V="$(curl -s http://download.nvidia.com/XFree86/Linux-x86_64/latest.txt | cut -d ' ' -f1)"
+			if [ -z $NV_DRV_V ]; then
+				echo "---Can't get latest version for nVidia driver from nVidia download server, putting container into sleep mode!---"
+				sleep infinity
+			fi
 		fi
 		echo "---Latest version for nVidia driver: v$NV_DRV_V---"
 	else
@@ -166,11 +196,14 @@ if [ "${BUILD_NVIDIA}" == "true" ]; then
 
 	## Get latest version from Seccomp
 	if [ "${SECCOMP_V}" == "latest" ]; then
-		echo "---Trying to get latest version for Seccomp---"
-		SECCOMP_V="$(curl -s https://api.github.com/repos/seccomp/libseccomp/releases/latest | grep tag_name | cut -d '"' -f4 | cut -d 'v' -f2)"
+		SECCOMP_V="$(grep SECCOMP_V /tmp/Unraid-Kernel-Helper -s | cut -d '=' -f2)"
 		if [ -z $SECCOMP_V ]; then
-			echo "---Can't get latest version for Seccomp, putting container into sleep mode!---"
-			sleep infinity
+			echo "---Trying to get latest version for Seccomp from Github---"
+			SECCOMP_V="$(curl -s https://api.github.com/repos/seccomp/libseccomp/releases/latest | grep tag_name | cut -d '"' -f4 | cut -d 'v' -f2)"
+			if [ -z $SECCOMP_V ]; then
+				echo "---Can't get latest version for Seccomp from Github, putting container into sleep mode!---"
+				sleep infinity
+			fi
 		fi
 		echo "---Latest version for Seccomp: v$SECCOMP_V---"
 	else
@@ -179,11 +212,14 @@ if [ "${BUILD_NVIDIA}" == "true" ]; then
 
 	## Get latest version from 'nvidia-container-runtime'
 	if [ "${NVIDIA_CONTAINER_RUNTIME_V}" == "latest" ]; then
-		echo "---Trying to get latest version for 'nvidia-container-runtime' driver---"
-		NVIDIA_CONTAINER_RUNTIME_V="$(curl -s https://api.github.com/repos/NVIDIA/nvidia-container-runtime/releases/latest | grep tag_name | cut -d '"' -f4 | cut -d 'v' -f2)"
+		NVIDIA_CONTAINER_RUNTIME_V="$(grep NVIDIA_CONTAINER_RUNTIME_V /tmp/Unraid-Kernel-Helper -s | cut -d '=' -f2)"
 		if [ -z $NVIDIA_CONTAINER_RUNTIME_V ]; then
-			echo "---Can't get latest version for 'nvidia-container-runtime', putting container into sleep mode!---"
-			sleep infinity
+			echo "---Trying to get latest version for 'nvidia-container-runtime' from Github---"
+			NVIDIA_CONTAINER_RUNTIME_V="$(curl -s https://api.github.com/repos/NVIDIA/nvidia-container-runtime/releases/latest | grep tag_name | cut -d '"' -f4 | cut -d 'v' -f2)"
+			if [ -z $NVIDIA_CONTAINER_RUNTIME_V ]; then
+				echo "---Can't get latest version for 'nvidia-container-runtime' from Github, putting container into sleep mode!---"
+				sleep infinity
+			fi
 		fi
 		echo "---Latest version for 'nvidia-container-runtime': v$NVIDIA_CONTAINER_RUNTIME_V---"
 	else
@@ -192,11 +228,14 @@ if [ "${BUILD_NVIDIA}" == "true" ]; then
 
 	## Get latest version from 'nvidia-toolkit'
 	if [ "${CONTAINER_TOOLKIT_V}" == "latest" ]; then
-		echo "---Trying to get latest version for 'nvidia-toolkit' driver---"
-		CONTAINER_TOOLKIT_V="$(curl -s https://api.github.com/repos/NVIDIA/nvidia-container-toolkit/releases/latest | grep tag_name | cut -d '"' -f4 | cut -d 'v' -f2)"
+		CONTAINER_TOOLKIT_V="$(grep CONTAINER_TOOLKIT_V /tmp/Unraid-Kernel-Helper -s | cut -d '=' -f2)"
 		if [ -z $CONTAINER_TOOLKIT_V ]; then
-			echo "---Can't get latest version for 'nvidia-toolkit', putting container into sleep mode!---"
-			sleep infinity
+			echo "---Trying to get latest version for 'nvidia-toolkit' from Github---"
+			CONTAINER_TOOLKIT_V="$(curl -s https://api.github.com/repos/NVIDIA/nvidia-container-toolkit/releases/latest | grep tag_name | cut -d '"' -f4 | cut -d 'v' -f2)"
+			if [ -z $CONTAINER_TOOLKIT_V ]; then
+				echo "---Can't get latest version for 'nvidia-toolkit' from Github, putting container into sleep mode!---"
+				sleep infinity
+			fi	
 		fi
 		echo "---Latest version for 'nvidia-toolkit': v$CONTAINER_TOOLKIT_V---"
 	else
@@ -205,11 +244,14 @@ if [ "${BUILD_NVIDIA}" == "true" ]; then
 
 	## Get latest version from 'libnvidia-container'
 	if [ "${LIBNVIDIA_CONTAINER_V}" == "latest" ]; then
-		echo "---Trying to get latest version for 'libnvidia-container'---"
-		LIBNVIDIA_CONTAINER_V="$(curl -s https://api.github.com/repos/NVIDIA/libnvidia-container/releases/latest | grep tag_name | cut -d '"' -f4 | cut -d 'v' -f2)"
+		LIBNVIDIA_CONTAINER_V="$(grep LIBNVIDIA_CONTAINER_V /tmp/Unraid-Kernel-Helper -s | cut -d '=' -f2)"
 		if [ -z $LIBNVIDIA_CONTAINER_V ]; then
-			echo "---Can't get latest version for 'libnvidia-container', putting container into sleep mode!---"
-			sleep infinity
+			echo "---Trying to get latest version for 'libnvidia-container' from Github---"
+			LIBNVIDIA_CONTAINER_V="$(curl -s https://api.github.com/repos/NVIDIA/libnvidia-container/releases/latest | grep tag_name | cut -d '"' -f4 | cut -d 'v' -f2)"
+			if [ -z $LIBNVIDIA_CONTAINER_V ]; then
+				echo "---Can't get latest version for 'libnvidia-container' from Github, putting container into sleep mode!---"
+				sleep infinity
+			fi
 		fi
 		echo "---Latest version for 'libnvidia-container': v$LIBNVIDIA_CONTAINER_V---"
 	else
@@ -222,11 +264,14 @@ fi
 if [ "${BUILD_ZFS}" == "true" ]; then
 	## Get latest version from ZFS
 	if [ "${ZFS_V}" == "latest" ]; then
-		echo "---Trying to get latest version for ZFS---"
-		ZFS_V="$(curl -s https://api.github.com/repos/openzfs/zfs/releases/latest | grep tag_name | cut -d '"' -f4 | cut -d '-' -f2)"
+		ZFS_V="$(grep ZFS_V /tmp/Unraid-Kernel-Helper -s | cut -d '=' -f2)"
 		if [ -z $ZFS_V ]; then
-			echo "---Can't get latest version for ZFS, putting container into sleep mode!---"
-			sleep infinity
+			echo "---Trying to get latest version for ZFS from Github---"
+			ZFS_V="$(curl -s https://api.github.com/repos/openzfs/zfs/releases/latest | grep tag_name | cut -d '"' -f4 | cut -d '-' -f2)"
+			if [ -z $ZFS_V ]; then
+				echo "---Can't get latest version for ZFS from Github, putting container into sleep mode!---"
+				sleep infinity
+			fi
 		fi
 		echo "---Latest version for ZFS: v$ZFS_V---"
 	else
@@ -242,33 +287,42 @@ fi
 if [ "${BUILD_ISCSI}" == "true" ]; then
 	## Get latest version from 'targetcli-fb', 'rtslib-fb' & 'configshell-fb'
 	if [ "${TARGETCLI_FB_V}" == "latest" ]; then
-		echo "---Trying to get latest version for 'targetcli-fb'---"
-		TARGETCLI_FB_V="$(curl -s https://api.github.com/repos/open-iscsi/targetcli-fb/releases/latest | grep tag_name | cut -d '"' -f4 | cut -d 'v' -f2)"
+		TARGETCLI_FB_V="$(grep TARGETCLI_FB_V /tmp/Unraid-Kernel-Helper -s | cut -d '=' -f2)"
 		if [ -z $TARGETCLI_FB_V ]; then
-			echo "---Can't get latest version for 'targetcli-fb', putting container into sleep mode!---"
-			sleep infinity
+			echo "---Trying to get latest version for 'targetcli-fb' from Github---"
+			TARGETCLI_FB_V="$(curl -s https://api.github.com/repos/open-iscsi/targetcli-fb/releases/latest | grep tag_name | cut -d '"' -f4 | cut -d 'v' -f2)"
+			if [ -z $TARGETCLI_FB_V ]; then
+				echo "---Can't get latest version for 'targetcli-fb' from Github, putting container into sleep mode!---"
+				sleep infinity
+			fi
 		fi
 		echo "---Latest version for 'targetcli-fb': v$TARGETCLI_FB_V---"
 	else
 		echo "---'targetcli-fb' version manually set to: v$TARGETCLI_FB_V---"
 	fi
 	if [ "${RTSLIB_FB_V}" == "latest" ]; then
-		echo "---Trying to get latest version for 'rtslib-fb'---"
-		RTSLIB_FB_V="$(curl -s https://api.github.com/repos/open-iscsi/rtslib-fb/releases/latest | grep tag_name | cut -d '"' -f4 | cut -d 'v' -f2)"
+		RTSLIB_FB_V="$(grep RTSLIB_FB_V /tmp/Unraid-Kernel-Helper -s | cut -d '=' -f2)"
 		if [ -z $RTSLIB_FB_V ]; then
-			echo "---Can't get latest version for 'rtslib-fb', putting container into sleep mode!---"
-			sleep infinity
+			echo "---Trying to get latest version for 'rtslib-fb'---"
+			RTSLIB_FB_V="$(curl -s https://api.github.com/repos/open-iscsi/rtslib-fb/releases/latest | grep tag_name | cut -d '"' -f4 | cut -d 'v' -f2)"
+			if [ -z $RTSLIB_FB_V ]; then
+				echo "---Can't get latest version for 'rtslib-fb', putting container into sleep mode!---"
+				sleep infinity
+			fi
 		fi
 		echo "---Latest version for 'rtslib-fb': v$RTSLIB_FB_V---"
 	else
 		echo "---'rtslib-fb' version manually set to: v$RTSLIB_FB_V---"
 	fi
 	if [ "${CONFIGSHELL_FB_V}" == "latest" ]; then
-		echo "---Trying to get latest version for 'configshell-fb'---"
-		CONFIGSHELL_FB_V="$(curl -s https://api.github.com/repos/open-iscsi/configshell-fb/tags | grep name | cut -d '"' -f4 | cut -d 'v' -f2 | head -1)"
+		CONFIGSHELL_FB_V="$(grep CONFIGSHELL_FB_V /tmp/Unraid-Kernel-Helper -s | cut -d '=' -f2)"
 		if [ -z $CONFIGSHELL_FB_V ]; then
-			echo "---Can't get latest version for 'configshell-fb', putting container into sleep mode!---"
-			sleep infinity
+			echo "---Trying to get latest version for 'configshell-fb'---"
+			CONFIGSHELL_FB_V="$(curl -s https://api.github.com/repos/open-iscsi/configshell-fb/tags | grep name | cut -d '"' -f4 | cut -d 'v' -f2 | head -1)"
+			if [ -z $CONFIGSHELL_FB_V ]; then
+				echo "---Can't get latest version for 'configshell-fb', putting container into sleep mode!---"
+				sleep infinity
+			fi
 		fi
 		echo "---Latest version for 'configshell-fb': v$CONFIGSHELL_FB_V---"
 	else
@@ -306,6 +360,11 @@ if [ "$IMAGES_FILE_PATH" == "/usr/src/stock" ]; then
 		rm ${DATA_DIR}/stock/${UNRAID_V}/*.sha256
 	fi
 	IMAGES_FILE_PATH=${DATA_DIR}/stock/${UNRAID_V}
+fi
+
+if [ "${BUILD_MLX_MFT}" == "true" ]; then
+	echo "---Build of Mellanox Firmware Tools not integrated in version 6.8.3---"
+	sleep 20
 fi
 
 ## Create output folder
@@ -956,6 +1015,11 @@ else
 		echo "-------------'targetcli-fb' v${TARGETCLI_FB_V}--------------"
 		echo "--------------'trslib-fb' v${RTSLIB_FB_V}----------------"
 		echo "------------'configshell-fb' v${CONFIGSHELL_FB_V}-------------"
+	fi
+	if [ "${BUILD_MLX_MFT}" == "true" ]; then
+		echo "-----Build of Mellanox Firmware Tools not------"
+		echo "---------integrated in this version of---------"
+		echo "-------------Unraid-Kernel-Helper--------------"
 	fi
 fi
 echo "-----------------------------------------------"
