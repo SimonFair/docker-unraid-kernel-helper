@@ -1,4 +1,4 @@
-FROM ich777/debian-baseimage
+FROM ich777/debian-baseimage:arm64
 
 LABEL maintainer="admin@minenet.at"
 
@@ -6,19 +6,19 @@ RUN	echo "deb http://deb.debian.org/debian bullseye main" >> /etc/apt/sources.li
 	apt-get update && \
 	apt-get -y install nano make gcc-9 bison flex bc libelf-dev squashfs-tools patch build-essential kmod cpio libncurses5-dev unzip rsync git curl bmake lsb-release libseccomp-dev libcap-dev pkg-config patchutils uuid-dev libblkid-dev libssl-dev dh-autoreconf libproc-processtable-perl beep zip libibmad-dev python3-dev python3-setuptools gperf && \
 	cd /tmp && \
-	wget -q -nc --show-progress --progress=bar:force:noscroll -O go.tar.gz https://golang.org/dl/go1.15.linux-amd64.tar.gz && \
+	wget -q -nc --show-progress --progress=bar:force:noscroll -O go.tar.gz https://golang.org/dl/go1.15.2.linux-arm64.tar.gz && \
 	tar -C /usr/local -xvzf go.tar.gz && \
 	export PATH=$PATH:/usr/local/go/bin && \
 	rm -R /tmp/go* && \
 	rm -rf /var/lib/apt/lists/*
 
-RUN rm -R /lib/x86_64-linux-gnu/liblzma.* && \
+RUN LAT_V="$(wget -qO- https://github.com/ich777/versions/raw/master/xz-archiver | grep LATEST | cut -d '=' -f2)" && \
+	rm -R /lib/aarch64-linux-gnu/liblzma.* && \
 	cd /tmp && \
-	wget -q -nc --show-progress --progress=bar:force:noscroll -O xz.tar https://github.com/ich777/xz/releases/download/5.2.5/xz-v5.2.5.tar.gz && \
-	tar -C / -xvf /tmp/xz.tar && \
-	rm /tmp/xz.tar && \
-	wget -q -nc --show-progress --progress=bar:force:noscroll https://github.com/ich777/python-unraid/raw/3.8.5/python-3.8.5-x86_64-1.tgz && \
-	wget -q -nc --show-progress --progress=bar:force:noscroll https://github.com/ich777/python-unraid/raw/3.7.3/gobject-introspection-1.46.0-x86_64-1.txz
+	wget -q -nc --show-progress --progress=bar:force:noscroll -O xz.tar.gz https://github.com/ich777/xz/releases/download/$LAT_V/xz-v$LAT_V-arm64.tar.gz && \
+	tar -C / -xvf /tmp/xz.tar.gz && \
+	rm /tmp/xz.tar.gz && \
+	wget -q -nc --show-progress --progress=bar:force:noscroll https://github.com/ich777/cpython/releases/download/3.8.5/python-v3.8.5-arm64-1.tgz
 
 ENV DATA_DIR="/usr/src"
 ENV UNRAID_V=6.9.0
