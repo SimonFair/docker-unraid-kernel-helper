@@ -838,9 +838,6 @@ if [ "${BUILD_ZFS}" == "true" ]; then
 		${DATA_DIR}/zfs-v${ZFS_V}/configure --prefix=${DATA_DIR}/bzroot-extracted-$UNAME/usr
 		make -j${CPU_COUNT}
 		make install
-		## Load Kernel Module and patch 'go' file on startup to load all existing ZFS Pools
-		echo '/sbin/modprobe zfs' >> ${DATA_DIR}/bzroot-extracted-$UNAME/etc/rc.d/rc.modules.local
-		sed -i '/chmod +x \/var\/tmp\/go/a\ \ echo "# Import all existing ZFS Pools\nzpool import -a &" >> /var/tmp/go' ${DATA_DIR}/bzroot-extracted-$UNAME/etc/rc.d/rc.local
 	elif [ "${ZFS_V}" == "master" ]; then
 		echo "---ZFS will be builded from latest OpenZFS branch on Github---"
 		cd ${DATA_DIR}
@@ -851,19 +848,42 @@ if [ "${BUILD_ZFS}" == "true" ]; then
 		${DATA_DIR}/zfs/configure --prefix=${DATA_DIR}/bzroot-extracted-$UNAME/usr
 		make -j${CPU_COUNT}
 		make install
-		## Load Kernel Module and patch files to load all existing ZFS Pools and Kernel Modules
-		echo '
+	else
+		echo "---ZFS manually set to v${ZFS_V}---"
+		cd ${DATA_DIR}
+		if [ ! -d ${DATA_DIR}/zfs-v${ZFS_V} ]; then
+			mkdir ${DATA_DIR}/zfs-v${ZFS_V}
+		fi
+		if [ ! -f ${DATA_DIR}/zfs-v${ZFS_V}.tar.gz ]; then
+			echo "---Downloading ZFS v${ZFS_V}, please wait!---"
+			if wget -q -nc --show-progress --progress=bar:force:noscroll -O ${DATA_DIR}/zfs-v${ZFS_V}.tar.gz https://github.com/openzfs/zfs/releases/download/zfs-${ZFS_V}/zfs-${ZFS_V}.tar.gz ; then
+				echo "---Successfully downloaded ZFS v${ZFS_V}---"
+			else
+				echo "---Download of ZFS v${ZFS_V} failed, putting container into sleep mode!---"
+				sleep infinity
+			fi
+		else
+			echo "---ZFS v${ZFS_V} found locally---"
+		fi
+		tar -C ${DATA_DIR}/zfs-v${ZFS_V} --strip-components=1 -xf ${DATA_DIR}/zfs-v${ZFS_V}.tar.gz
+		echo "---Compiling ZFS v$ZFS_V, this can take some time, please wait!---"
+		cd ${DATA_DIR}/zfs-v${ZFS_V}
+		${DATA_DIR}/zfs-v${ZFS_V}/configure --prefix=${DATA_DIR}/bzroot-extracted-$UNAME/usr
+		make -j${CPU_COUNT}
+		make install
+	fi
+	## Load Kernel Module and patch files to load all existing ZFS Pools and Kernel Modules
+	echo '
 # Load ZFS Kernel Module
 /sbin/modprobe zfs' >> ${DATA_DIR}/bzroot-extracted-$UNAME/etc/rc.d/rc.modules.local
-		echo "
+	echo "
 # Import all existing ZFS Pools on Array start
 echo 'Importing all ZFS Pools in background'
 zpool import -a &" >> ${DATA_DIR}/bzroot-extracted-$UNAME/usr/local/emhttp/plugins/dynamix/event/disks_mounted/local_syslog_start
-		echo "
+	echo "
 # Export all existing ZFS Pools on Array stop
 echo 'Exporting all ZFS Pools in background'
 zpool export -a &" >> ${DATA_DIR}/bzroot-extracted-$UNAME/usr/local/emhttp/plugins/dynamix/event/unmounting_disks/local_syslog_stop
-	fi
 fi
 
 if [ "${BUILD_ISCSI}" == "true" ]; then
