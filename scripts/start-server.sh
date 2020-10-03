@@ -102,6 +102,27 @@ if [ "${BUILD_NVIDIA}" == "true" ]; then
 	echo "---WARNING WARNING WARNING WARNING WARNING WARNING----"
 	echo "------------------------------------------------------"
 fi
+if [ "${USER_SCRIPT}" == "true" ]; then
+	if [ ! -d ${DATA_DIR}/user_script ]; then
+		mkdir ${DATA_DIR}/user_script
+		chmod -R ${DATA_PERM} ${DATA_DIR}/user_script
+		chown -R ${UID}:${GID} ${DATA_DIR}/user_script
+	else
+		echo
+		echo "---Folder 'user_script' found, please check if the script in there is up-to-date---"
+	fi
+	echo
+	echo "------------------------------------------------------"
+	echo "-----USER SCRIPT --- USER SCRIPT --- USER SCRIPT------"
+	echo "------------------------------------------------------"
+	echo "--------User Script enabled, please place your--------"
+	echo "-------user script with the name 'script.sh' in-------"
+	echo "-----the 'user_script' folder, it will be executed----"
+	echo "----------after all build steps are finished!---------"
+	echo "------------------------------------------------------"
+	echo "-----USER SCRIPT --- USER SCRIPT --- USER SCRIPT------"
+	echo "------------------------------------------------------"
+fi
 if [ "${USER_PATCHES}" == "true" ]; then
 	if [ ! -d ${DATA_DIR}/user_patches ]; then
 		mkdir ${DATA_DIR}/user_patches
@@ -1253,6 +1274,17 @@ EOF
 	${DATA_DIR}/seccomp-v${SECCOMP_V}/configure --prefix=/usr --disable-static
 	make -j${CPU_COUNT}
 	DESTDIR=${DATA_DIR}/bzroot-extracted-$UNAME make install
+fi
+
+## Execute user script
+if [ "${USER_SCRIPT}" == "true" ]; then
+	if [ ! -f ${DATA_DIR}/user_script/script.sh ]; then
+		echo "---No file named 'script.sh' found in the folder 'user_script', continuing!---"
+	else
+		echo "---Executing 'user_script.sh'!---"
+		chmod +x ${DATA_DIR}/user_script/script.sh
+		${DATA_DIR}/user_script/script.sh
+	fi
 fi
 
 ## Create bzmodules
